@@ -18,6 +18,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "BVHierarchy.h"
+#include "SpatialPartitioning.h"
 //#include "Collision.h"
 
 class SimpleScene_Quad : public Scene
@@ -40,7 +41,9 @@ public:
     inline GLuint GetProgramID() { return programID; }
     inline Camera* GetCamera() { return &camera; }
     void RenderTree(BVHierarchy::Node** tree, const glm::mat4& projection, const glm::mat4& view);
+    void RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view);
     void FreeTree(BVHierarchy::Node* node);
+    void FreeOctTree(SpatialPartitioning::TreeNode* node);
 private:
 
     // member functions
@@ -67,6 +70,10 @@ private:
     bool renderBV = true;
     int renderDepth = 0; 
     bool bottomUpTree = false;
+
+    bool OctTreeEnabled = false;
+    bool newOctTree = false;
+    SpatialPartitioning::TreeNode* spatialPartitionTree;
 };
 
 

@@ -22,7 +22,7 @@ public:
 	Collision::Sphere sphereBV{ glm::vec3(0.f), 0.f };
 	const char* colliderName = "AABB"; //when just loading in
 	bool changedCollider = true; //if changed, create a new boundingVolume, if not dont create every frame
-
+	int depth;
 private:
 	const char* model_id{};
 	int model_id_int{};

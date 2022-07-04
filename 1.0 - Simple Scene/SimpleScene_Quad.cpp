@@ -77,6 +77,7 @@ void SimpleScene_Quad::CleanUp()
 	{
 		FreeTree(*tree);
 		delete tree;
+		FreeOctTree(spatialPartitionTree);
 	}
 }
 
@@ -550,7 +551,7 @@ int SimpleScene_Quad::Render()
 			gameObjList[i].aabbBV = BoundingVolume::createAABB(models[gameObjList[i].GetModelID()].combinedVertices);
 			gameObjList[i].aabbBV.m_Min = gameObjList[i].transform.Position + gameObjList[i].aabbBV.m_Min;
 			gameObjList[i].aabbBV.m_Max = gameObjList[i].transform.Position + gameObjList[i].aabbBV.m_Max;
-			
+
 			if (gameObjList[i].colliderName == "PCA Sphere")
 			{
 				gameObjList[i].sphereBV = BoundingVolume::PCASphere(models[gameObjList[i].GetModelID()].combinedVertices);
@@ -603,8 +604,8 @@ int SimpleScene_Quad::Render()
 		// Uniform transformation (vertex shader)
 		GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
 		glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
-		glm::vec3 colour{ 0.f, 1.f, 0.f };
-
+		//glm::vec3 colour{ 0.f, 1.f, 0.f };
+		
 		GLint fCamPosLoc = glGetUniformLocation(programID, "cameraPos");
 		glUniform3f(fCamPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
 		glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), false);
@@ -632,6 +633,12 @@ int SimpleScene_Quad::Render()
 				glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
 				glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
 				glm::vec3 colour = glm::vec3(0.f, 1.f, 0.f);
+				if (OctTreeEnabled)
+				{
+					colour = glm::vec3(1.f, 0.f, 0.f); //Red
+					if (gameObjs.depth == 0)
+						colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+				}
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 				//Draw
 				models["Cube"].DrawBoundingVolume();
@@ -647,6 +654,13 @@ int SimpleScene_Quad::Render()
 				glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
 				glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
 				glm::vec3 colour = glm::vec3(0.f, 1.f, 0.f);
+				if (OctTreeEnabled)
+				{
+					colour = glm::vec3(1.f, 0.f, 0.f); //Red
+					if (gameObjs.depth == 0)
+						colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+				}
+				
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 				//Draw
 				models["Sphere"].DrawBoundingVolume();
@@ -684,22 +698,61 @@ int SimpleScene_Quad::Render()
 			RenderTree(tree, projection, view);
 		}
 	}
+	else if (OctTreeEnabled)
+	{
+		if (spatialPartitionTree == nullptr)
+		{
+			glm::vec3 Min = gameObjList[0].aabbBV.m_Min;
+			glm::vec3 Max = gameObjList[0].aabbBV.m_Max;
+			for (auto& obj : gameObjList)
+			{
+				if (Min.x > obj.aabbBV.m_Min.x)
+					Min.x = obj.aabbBV.m_Min.x;
+				if (Max.x < obj.aabbBV.m_Max.x)
+					Max.x = obj.aabbBV.m_Max.x;
+				if (Min.y > obj.aabbBV.m_Min.y)
+					Min.y = obj.aabbBV.m_Min.y;
+				if (Max.y < obj.aabbBV.m_Max.y)
+					Max.y = obj.aabbBV.m_Max.y;
+				if (Min.z > obj.aabbBV.m_Min.z)
+					Min.z = obj.aabbBV.m_Min.z;
+				if (Max.z < obj.aabbBV.m_Max.z)
+					Max.z = obj.aabbBV.m_Max.z;
+			}
+			glm::vec3 center = (Min + Max) / 2.f;
+			float halfWidth = std::max(Max.x - Min.x, Max.y - Min.y);
+			halfWidth = std::max(Max.z - Min.z, halfWidth);
+			halfWidth *= 0.5f;
+			spatialPartitionTree = SpatialPartitioning::BuildOctTree(center, halfWidth, 1);
+
+			//Insert all the game Objs into the list
+			for (auto& obj : gameObjList)
+			{
+				SpatialPartitioning::InsertIntoOctTree(spatialPartitionTree, &obj);
+			}
+
+		}
+		else
+		{
+			RenderOctTree(spatialPartitionTree, projection, view);
+		}
+	}
 	else
 	{
-		if (tree != nullptr && newTree)
-		{
-			FreeTree(*tree);
-			delete tree;
-			tree = nullptr;
-			newTree = false;
-		}
+	if (tree != nullptr && newTree)
+	{
+		FreeTree(*tree);
+		delete tree;
+		tree = nullptr;
+		newTree = false;
+	}
 	}
 
 	//Minimap CODE SECOND DRAW
 	{
-		//miniMapCam.width = camera.width / 4.f;
-		//miniMapCam.height = camera.height / 4.f;
-		//glViewport((int)(camera.width - miniMapCam.width), (int)(camera.height - miniMapCam.height), (GLsizei)(miniMapCam.width), (GLsizei(miniMapCam.height)));
+	//miniMapCam.width = camera.width / 4.f;
+	//miniMapCam.height = camera.height / 4.f;
+	//glViewport((int)(camera.width - miniMapCam.width), (int)(camera.height - miniMapCam.height), (GLsizei)(miniMapCam.width), (GLsizei(miniMapCam.height)));
 
 	}
 
@@ -714,6 +767,7 @@ int SimpleScene_Quad::Render()
 			if (ImGui::BeginTabItem("Bounding Volumes"))
 			{
 				BVHenabled = false;
+				OctTreeEnabled = false;
 				//runOnce = false;
 				if (ImGui::Button("Update BV (After moving)"))
 				{
@@ -728,7 +782,7 @@ int SimpleScene_Quad::Render()
 
 				for (size_t i = 0; i < gameObjList.size(); i++) //Render gameObj controls
 				{
-					ImGui::Text("Object %d", i+1);
+					ImGui::Text("Object %d", i + 1);
 					ImGui::PushID(i);
 					gameObjList[i].DrawImGuiControls();
 					ImGui::PopID();
@@ -739,6 +793,7 @@ int SimpleScene_Quad::Render()
 			if (ImGui::BeginTabItem("Bounding Volume Hierarchy"))
 			{
 				BVHenabled = true;
+				OctTreeEnabled = false;
 				ImGui::Text("Adjust settings before clicking \"Update Tree\"");
 				if (ImGui::Button("Update Tree"))
 				{
@@ -794,7 +849,7 @@ int SimpleScene_Quad::Render()
 				ImGui::Text("Bottom Up Heuristics Weights");
 				//ImGui::NextColumn();
 				//ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 5.0f);
-				
+
 				float oldNeighbour = nearestNeighbourWeight;
 				ImGui::Text("Nearest Neighbour ");
 				ImGui::SameLine();
@@ -830,7 +885,7 @@ int SimpleScene_Quad::Render()
 						relVolIncreaseWeight = 0.f;
 					}
 				}
-				
+
 				float oldrelIncrease = relVolIncreaseWeight;
 				ImGui::Text("Min Rel Increase ");
 				ImGui::SameLine();
@@ -848,7 +903,13 @@ int SimpleScene_Quad::Render()
 						combinedVolWeight = 0.f;
 					}
 				}
-				
+
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("Spatial Partitioning"))
+			{
+				OctTreeEnabled = true;
+				BVHenabled = false;
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();
@@ -913,7 +974,7 @@ void SimpleScene_Quad::RenderTree(BVHierarchy::Node** tree, const glm::mat4& pro
 	GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
 	glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
 	glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
-	
+
 	//TreeDepth 0 Root Node
 	glm::vec3 colour = glm::vec3(1.f, 0.f, 0.f); //Red
 	if (node->treeDepth == 1)
@@ -939,6 +1000,58 @@ void SimpleScene_Quad::RenderTree(BVHierarchy::Node** tree, const glm::mat4& pro
 	RenderTree(&node->rChild, projection, view);
 }
 
+void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view)
+{
+	SpatialPartitioning::TreeNode* node = tree;
+	if (node == nullptr)
+		return;
+
+	Transform aabbTrans, sphereTrans;
+
+	//float scaleX = (node->BV_AABB.m_Max.x - node->BV_AABB.m_Min.x) * 0.5f;
+	//float scaleY = (node->BV_AABB.m_Max.y - node->BV_AABB.m_Min.y) * 0.5f;
+	//float scaleZ = (node->BV_AABB.m_Max.z - node->BV_AABB.m_Min.z) * 0.5f;
+
+	glm::vec3 octTreeNodeCentre = node->center;
+	Transform temp(octTreeNodeCentre, 1.f, { node->halfwidth, node->halfwidth, node->halfwidth }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });
+	aabbTrans = temp;
+
+	//gameObjs.SetTransform(aabbTrans);
+	glm::mat4 objTrans;
+	objTrans = projection * view * aabbTrans.GetModelMtx3f();
+	GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
+	glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
+	glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
+
+	////TreeDepth 0 Root Node
+	glm::vec3 colour = glm::vec3(1.f, 0.f, 0.f); //Red
+	if (node->depth == 0)
+		colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+	//else if (node->treeDepth == 2)
+	//	colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
+	//else if (node->treeDepth == 3)
+	//	colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
+	//else if (node->treeDepth == 4)
+	//	colour = glm::vec3(0.f, 0.f, 1.f); //Blue
+	//else if (node->treeDepth == 5)
+	//	colour = glm::vec3(1.f, 0.f, 1.f); //Pink
+	//else if (node->treeDepth == 6)
+	//	colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
+
+	//	colour = glm::vec3(0.f, 0.f, 1.f);
+	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
+	//Draw
+	//if (renderBVHSphere)
+	//	models["Sphere"].DrawBoundingVolume();
+	//else 
+	models["Cube"].DrawBoundingVolume();
+
+	for (size_t i = 0; i < 8; i++)
+	{
+		RenderOctTree(node->pChildren[i], projection, view); //Recursive call for all the children
+	}
+}
+
 void SimpleScene_Quad::FreeTree(BVHierarchy::Node* node)
 {
 	if (node == nullptr)
@@ -948,4 +1061,15 @@ void SimpleScene_Quad::FreeTree(BVHierarchy::Node* node)
 	FreeTree(node->rChild);
 	delete node;
 
+}
+
+void SimpleScene_Quad::FreeOctTree(SpatialPartitioning::TreeNode* node)
+{
+	if (node == nullptr)
+		return;
+	for (size_t i = 0; i < 8; i++)
+	{
+		FreeOctTree(node->pChildren[i]); //Free all children
+	}
+	delete node;
 }
