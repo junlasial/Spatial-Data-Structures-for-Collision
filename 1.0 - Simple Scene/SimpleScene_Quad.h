@@ -72,7 +72,9 @@ private:
     bool bottomUpTree = false;
 
     bool OctTreeEnabled = false;
+    bool renderOctTree = true;
     bool newOctTree = false;
+    int octTreeRenderDepth = 0;
     SpatialPartitioning::TreeNode* spatialPartitionTree;
 };
 

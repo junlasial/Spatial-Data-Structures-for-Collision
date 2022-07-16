@@ -637,6 +637,8 @@ int SimpleScene_Quad::Render()
 				{
 					colour = glm::vec3(1.f, 0.f, 0.f); //Red
 					if (gameObjs.depth == 0)
+						colour = glm::vec3(1.f, 0.f, 0.f); //Red
+					else if (gameObjs.depth == 1)
 						colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
 					else if (gameObjs.depth == 2)
 						colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
@@ -748,7 +750,8 @@ int SimpleScene_Quad::Render()
 		}
 		else
 		{
-			RenderOctTree(spatialPartitionTree, projection, view, 0);
+			if (renderOctTree)
+				RenderOctTree(spatialPartitionTree, projection, view, 0);
 		}
 	}
 	else
@@ -924,6 +927,14 @@ int SimpleScene_Quad::Render()
 			{
 				OctTreeEnabled = true;
 				BVHenabled = false;
+				ImGui::Text("Render OctTree");
+				ImGui::Checkbox("##RenderOctTree", &renderOctTree);
+
+				ImGui::Text("OctTree Level (Max 1)");
+				ImGui::InputInt("##OctTreeDepth", &octTreeRenderDepth);
+				if (octTreeRenderDepth > 1) octTreeRenderDepth = 1;
+				if (octTreeRenderDepth < 0) octTreeRenderDepth = 0;
+
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();
@@ -991,18 +1002,18 @@ void SimpleScene_Quad::RenderTree(BVHierarchy::Node** tree, const glm::mat4& pro
 
 	//TreeDepth 0 Root Node
 	glm::vec3 colour = glm::vec3(1.f, 0.f, 0.f); //Red
-	//if (node->treeDepth == 1)
-	//	colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
-	//else if (node->treeDepth == 2)
-	//	colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
-	//else if (node->treeDepth == 3)
-	//	colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
-	//else if (node->treeDepth == 4)
-	//	colour = glm::vec3(0.f, 0.f, 1.f); //Blue
-	//else if (node->treeDepth == 5)
-	//	colour = glm::vec3(1.f, 0.f, 1.f); //Pink
-	//else if (node->treeDepth == 6)
-	//	colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
+	if (node->treeDepth == 1)
+		colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+	else if (node->treeDepth == 2)
+		colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
+	else if (node->treeDepth == 3)
+		colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
+	else if (node->treeDepth == 4)
+		colour = glm::vec3(0.f, 0.f, 1.f); //Blue
+	else if (node->treeDepth == 5)
+		colour = glm::vec3(1.f, 0.f, 1.f); //Pink
+	else if (node->treeDepth == 6)
+		colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
 
 	//	colour = glm::vec3(0.f, 0.f, 1.f);
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
@@ -1020,6 +1031,8 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 	if (node == nullptr)
 		return;
 
+	if (node->depth < octTreeRenderDepth)
+		return; //dont render the deeper nodes
 	Transform aabbTrans, sphereTrans;
 
 	//float scaleX = (node->BV_AABB.m_Max.x - node->BV_AABB.m_Min.x) * 0.5f;
@@ -1039,20 +1052,24 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 	////TreeDepth 0 Root Node
 	glm::vec3 colour = glm::vec3(1.f, 0.f, 0.f); //Red
-	//if (col == 0)
-	//	colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
-	//else if (col == 2)
-	//	colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
-	//else if (col == 3)
-	//	colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
-	//else if (col == 4)
-	//	colour = glm::vec3(0.f, 0.f, 1.f); //Blue
-	//else if (col == 5)
-	//	colour = glm::vec3(1.f, 0.f, 1.f); //Pink
-	//else if (col == 6)
-	//	colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
-	//else if (col == 7)
-	//	colour = glm::vec3(0.3f, 0.3f, 0.5f);
+	if (col == 0)
+		colour = glm::vec3(1.f, 0.f, 0.f); //Red
+	else if (col == 1)
+		colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+	else if (col == 2)
+		colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
+	else if (col == 3)
+		colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
+	else if (col == 4)
+		colour = glm::vec3(0.f, 0.f, 1.f); //Blue
+	else if (col == 5)
+		colour = glm::vec3(1.f, 0.f, 1.f); //Pink
+	else if (col == 6)
+		colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
+	else if (col == 7)
+		colour = glm::vec3(0.3f, 0.3f, 0.5f);
+	else if (col == 8)
+		colour = glm::vec3(0.3f, 0.6f, 0.9f);
 
 	//	colour = glm::vec3(0.f, 0.f, 1.f);
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
