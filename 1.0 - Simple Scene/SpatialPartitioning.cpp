@@ -3,7 +3,7 @@
 
 namespace SpatialPartitioning
 {
-	TreeNode* SpatialPartitioning::BuildOctTree(glm::vec3 center, float halfWidth, int level)
+	TreeNode* SpatialPartitioning::BuildOctTree(glm::vec3 center, float halfWidth, int level, int col)
 	{
 		// Base case
 		if (level < 0)
@@ -12,7 +12,7 @@ namespace SpatialPartitioning
 		// 2. Assign pChildren = nullptr, pObjects = nullptr
 		TreeNode* pNode = new TreeNode(center, halfWidth, nullptr);
 		pNode->depth = level;
-
+		pNode->col = col; //render diff children diff col
 		glm::vec3 offset;
 		float step = halfWidth * 0.5f;
 		for (size_t i = 0; i < 8; i++)
@@ -21,7 +21,7 @@ namespace SpatialPartitioning
 			offset.x = ((i & 1) ? step : -step);
 			offset.y = ((i & 2) ? step : -step);
 			offset.z = ((i & 4) ? step : -step);
-			pNode->pChildren[i] = BuildOctTree(center + offset, step, level - 1);
+			pNode->pChildren[i] = BuildOctTree(center + offset, step, level - 1, ++col);
 		}
 		return pNode;
 	}
@@ -41,8 +41,9 @@ namespace SpatialPartitioning
 		{
 			// Node straddles the child cells, so store it at parent level 
 			// Insert into this node’s list of objects
+			//newObject->depth = pNode->depth; //assign depth used for rendering later
+			newObject->depth = pNode->col; //assign depth used for rendering later (diff child diff colour)
 			pNode->pObjects.push_back(newObject);
-			newObject->depth = pNode->depth; //assign depth used for rendering later
 		}
 
 		return result.first; // can serve as an error code
@@ -57,7 +58,8 @@ namespace SpatialPartitioning
 			glm::vec3 centreOfObj = (newObject->aabbBV.m_Max + newObject->aabbBV.m_Min) * 0.5f;
 			float d = (centreOfObj[axis] - pNode->center[axis]);
 			// Check if d is within bounds of the BV
-			if (abs(d) <= newObject->aabbBV.m_Max[axis] - newObject->aabbBV.m_Min[axis])
+			float objHalfExtents = (newObject->aabbBV.m_Max[axis] - newObject->aabbBV.m_Min[axis]) * 0.5f;
+ 			if (abs(d) <= objHalfExtents)
 			{
 				bStraddle = true;
 				break;

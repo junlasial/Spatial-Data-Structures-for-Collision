@@ -12,9 +12,10 @@ namespace SpatialPartitioning
 		unsigned int depth;
 		TreeNode(glm::vec3 center, float halfWidth, TreeNode* childrenArray) :
 			center{ center }, halfwidth{ halfWidth }, pChildren{ childrenArray } {}
+		int col;
 	};
 
-	TreeNode* BuildOctTree(glm::vec3 center, float halfWidth, int level);
+	TreeNode* BuildOctTree(glm::vec3 center, float halfWidth, int level, int col);
 	int InsertIntoOctTree(TreeNode* pNode, GameObject* newObject);
 	std::pair<int, bool> getChildIndex(TreeNode* pNode, GameObject* newObject);
 	

@@ -638,6 +638,20 @@ int SimpleScene_Quad::Render()
 					colour = glm::vec3(1.f, 0.f, 0.f); //Red
 					if (gameObjs.depth == 0)
 						colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+					else if (gameObjs.depth == 2)
+						colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
+					else if (gameObjs.depth == 3)
+						colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
+					else if (gameObjs.depth == 4)
+						colour = glm::vec3(0.f, 0.f, 1.f); //Blue
+					else if (gameObjs.depth == 5)
+						colour = glm::vec3(1.f, 0.f, 1.f); //Pink
+					else if (gameObjs.depth == 6)
+						colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
+					else if (gameObjs.depth == 7)
+						colour = glm::vec3(0.3f, 0.3f, 0.5f);
+					else if (gameObjs.depth == 8)
+						colour = glm::vec3(0.3f, 0.6f, 0.9f);
 				}
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 				//Draw
@@ -723,7 +737,7 @@ int SimpleScene_Quad::Render()
 			float halfWidth = std::max(Max.x - Min.x, Max.y - Min.y);
 			halfWidth = std::max(Max.z - Min.z, halfWidth);
 			halfWidth *= 0.5f;
-			spatialPartitionTree = SpatialPartitioning::BuildOctTree(center, halfWidth, 1);
+			spatialPartitionTree = SpatialPartitioning::BuildOctTree(center, halfWidth, 1, 0);
 
 			//Insert all the game Objs into the list
 			for (auto& obj : gameObjList)
@@ -734,7 +748,7 @@ int SimpleScene_Quad::Render()
 		}
 		else
 		{
-			RenderOctTree(spatialPartitionTree, projection, view);
+			RenderOctTree(spatialPartitionTree, projection, view, 0);
 		}
 	}
 	else
@@ -977,18 +991,18 @@ void SimpleScene_Quad::RenderTree(BVHierarchy::Node** tree, const glm::mat4& pro
 
 	//TreeDepth 0 Root Node
 	glm::vec3 colour = glm::vec3(1.f, 0.f, 0.f); //Red
-	if (node->treeDepth == 1)
-		colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
-	else if (node->treeDepth == 2)
-		colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
-	else if (node->treeDepth == 3)
-		colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
-	else if (node->treeDepth == 4)
-		colour = glm::vec3(0.f, 0.f, 1.f); //Blue
-	else if (node->treeDepth == 5)
-		colour = glm::vec3(1.f, 0.f, 1.f); //Pink
-	else if (node->treeDepth == 6)
-		colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
+	//if (node->treeDepth == 1)
+	//	colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+	//else if (node->treeDepth == 2)
+	//	colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
+	//else if (node->treeDepth == 3)
+	//	colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
+	//else if (node->treeDepth == 4)
+	//	colour = glm::vec3(0.f, 0.f, 1.f); //Blue
+	//else if (node->treeDepth == 5)
+	//	colour = glm::vec3(1.f, 0.f, 1.f); //Pink
+	//else if (node->treeDepth == 6)
+	//	colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
 
 	//	colour = glm::vec3(0.f, 0.f, 1.f);
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
@@ -1000,7 +1014,7 @@ void SimpleScene_Quad::RenderTree(BVHierarchy::Node** tree, const glm::mat4& pro
 	RenderTree(&node->rChild, projection, view);
 }
 
-void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view)
+void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col)
 {
 	SpatialPartitioning::TreeNode* node = tree;
 	if (node == nullptr)
@@ -1025,18 +1039,20 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 	////TreeDepth 0 Root Node
 	glm::vec3 colour = glm::vec3(1.f, 0.f, 0.f); //Red
-	if (node->depth == 0)
-		colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
-	//else if (node->treeDepth == 2)
+	//if (col == 0)
+	//	colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+	//else if (col == 2)
 	//	colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
-	//else if (node->treeDepth == 3)
+	//else if (col == 3)
 	//	colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
-	//else if (node->treeDepth == 4)
+	//else if (col == 4)
 	//	colour = glm::vec3(0.f, 0.f, 1.f); //Blue
-	//else if (node->treeDepth == 5)
+	//else if (col == 5)
 	//	colour = glm::vec3(1.f, 0.f, 1.f); //Pink
-	//else if (node->treeDepth == 6)
+	//else if (col == 6)
 	//	colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
+	//else if (col == 7)
+	//	colour = glm::vec3(0.3f, 0.3f, 0.5f);
 
 	//	colour = glm::vec3(0.f, 0.f, 1.f);
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
@@ -1048,7 +1064,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 	for (size_t i = 0; i < 8; i++)
 	{
-		RenderOctTree(node->pChildren[i], projection, view); //Recursive call for all the children
+		RenderOctTree(node->pChildren[i], projection, view, ++col); //Recursive call for all the children
 	}
 }
 

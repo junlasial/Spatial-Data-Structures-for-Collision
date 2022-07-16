@@ -41,7 +41,7 @@ public:
     inline GLuint GetProgramID() { return programID; }
     inline Camera* GetCamera() { return &camera; }
     void RenderTree(BVHierarchy::Node** tree, const glm::mat4& projection, const glm::mat4& view);
-    void RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view);
+    void RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col);
     void FreeTree(BVHierarchy::Node* node);
     void FreeOctTree(SpatialPartitioning::TreeNode* node);
 private:
