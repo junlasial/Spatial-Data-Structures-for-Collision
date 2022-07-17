@@ -173,6 +173,20 @@ int SimpleScene_Quad::Init()
 	miniMapCam.Position = { 0.f, 0.f, 4.f };
 	miniMapCam.Zoom = 60.f;
 
+	//Get polygons from models
+	for (auto& model : models)
+	{
+		modelPolys.insert({ model.first, SpatialPartitioning::getPolygonsFromModel(model.second) });
+	}
+
+	//Get polygons for every game object, put in a single vector (COSTLY TO UPDATE EVERY VERTEX)
+	for (auto& obj : gameObjList)
+	{
+		std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
+
+		totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
+
+	}
 
 	return Scene::Init();
 }
@@ -581,6 +595,7 @@ int SimpleScene_Quad::Render()
 			gameObjList[i].changedCollider = false;
 		}
 		BVHObjs[i] = &gameObjList[i];
+
 	}
 
 
@@ -605,7 +620,7 @@ int SimpleScene_Quad::Render()
 		GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
 		glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
 		//glm::vec3 colour{ 0.f, 1.f, 0.f };
-		
+
 		GLint fCamPosLoc = glGetUniformLocation(programID, "cameraPos");
 		glUniform3f(fCamPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
 		glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), false);
@@ -676,7 +691,7 @@ int SimpleScene_Quad::Render()
 					if (gameObjs.depth == 0)
 						colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
 				}
-				
+
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 				//Draw
 				models["Sphere"].DrawBoundingVolume();
@@ -754,22 +769,38 @@ int SimpleScene_Quad::Render()
 				RenderOctTree(spatialPartitionTree, projection, view, 0);
 		}
 	}
+	else if (BSPTreeEnabled)
+	{
+		if (BSPTree == nullptr)
+		{
+
+			//BSPTree = SpatialPartitioning::BuildBSPTree(totalObjPolygons, 0);
+
+
+
+		}
+		else
+		{
+			if (renderBSPTree);
+				//render BSP Tree
+		}
+	}
 	else
 	{
-	if (tree != nullptr && newTree)
-	{
-		FreeTree(*tree);
-		delete tree;
-		tree = nullptr;
-		newTree = false;
-	}
+		if (tree != nullptr && newTree)
+		{
+			FreeTree(*tree);
+			delete tree;
+			tree = nullptr;
+			newTree = false;
+		}
 	}
 
 	//Minimap CODE SECOND DRAW
 	{
-	//miniMapCam.width = camera.width / 4.f;
-	//miniMapCam.height = camera.height / 4.f;
-	//glViewport((int)(camera.width - miniMapCam.width), (int)(camera.height - miniMapCam.height), (GLsizei)(miniMapCam.width), (GLsizei(miniMapCam.height)));
+		//miniMapCam.width = camera.width / 4.f;
+		//miniMapCam.height = camera.height / 4.f;
+		//glViewport((int)(camera.width - miniMapCam.width), (int)(camera.height - miniMapCam.height), (GLsizei)(miniMapCam.width), (GLsizei(miniMapCam.height)));
 
 	}
 
@@ -785,6 +816,7 @@ int SimpleScene_Quad::Render()
 			{
 				BVHenabled = false;
 				OctTreeEnabled = false;
+				BSPTreeEnabled = false;
 				//runOnce = false;
 				if (ImGui::Button("Update BV (After moving)"))
 				{
@@ -811,6 +843,7 @@ int SimpleScene_Quad::Render()
 			{
 				BVHenabled = true;
 				OctTreeEnabled = false;
+				BSPTreeEnabled = false;
 				ImGui::Text("Adjust settings before clicking \"Update Tree\"");
 				if (ImGui::Button("Update Tree"))
 				{
@@ -925,7 +958,21 @@ int SimpleScene_Quad::Render()
 			}
 			if (ImGui::BeginTabItem("Spatial Partitioning"))
 			{
-				OctTreeEnabled = true;
+				static const char* items[]{ "OctTree", "BSPTree" };
+				ImGui::NewLine();
+				ImGui::Text("Trees");
+				ImGui::ListBox("", &spatPartTree, items, IM_ARRAYSIZE
+				(items), 2);
+				if (spatPartTree == 0)
+				{
+					OctTreeEnabled = true;
+					BSPTreeEnabled = false;
+				}
+				else
+				{
+					BSPTreeEnabled = true;
+					OctTreeEnabled = false;
+				}
 				BVHenabled = false;
 				ImGui::Text("Render OctTree");
 				ImGui::Checkbox("##RenderOctTree", &renderOctTree);

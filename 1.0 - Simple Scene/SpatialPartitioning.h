@@ -59,10 +59,14 @@ namespace SpatialPartitioning
 		POLYGON_COPLANAR_WITH_PLANE
 	};
 
+	std::vector<Polygon> getPolygonsFromModel(const Model& model);
+	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, GameObject& obj);
+
 	Collision::Plane GetPlaneFromPolygon(Polygon* poly);
 	POLYGON_ATTRIB ClassifyPolygonToPlane(Polygon* poly, Collision::Plane plane);
 	Collision::Plane PickSplittingPlane(std::vector<Polygon*>& polygons);
 	void SplitPolygon(Polygon& poly, Collision::Plane plane, Polygon** frontPoly, Polygon** backPoly);
+
 
 	BSPNode* BuildBSPTree(std::vector<Polygon*>& polygons, int depth);
 	

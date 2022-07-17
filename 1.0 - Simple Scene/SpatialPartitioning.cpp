@@ -1,8 +1,8 @@
 #include "SpatialPartitioning.h"
 #include <array>
 
-#define MAX_DEPTH 2
-#define MIN_LEAF_SIZE 4
+#define MAX_DEPTH 7
+#define MIN_LEAF_SIZE 30
 
 namespace SpatialPartitioning
 {
@@ -248,6 +248,42 @@ namespace SpatialPartitioning
 		// Create (and return) two new polygons from the two vertex lists
 		*frontPoly = new Polygon(frontVerts);
 		*backPoly = new Polygon(backVerts);
+	}
+
+	std::vector<Polygon> getPolygonsFromModel(const Model& model)
+	{
+		std::vector<Polygon> polygons;
+
+		for (auto& mesh : model.meshes)
+		{
+			const auto& idx = mesh.indices;
+			const auto& v = mesh.vertices;
+
+			for (size_t i = 0; i < idx.size(); i += 3)
+			{
+				std::vector<glm::vec3> vertices{ v[idx[i]].Position , v[idx[i+1]].Position , v[idx[i+2]].Position };
+				Polygon poly(vertices); //1 triangle 1 polygon
+				polygons.push_back(poly);
+			}
+		}
+
+		//Form polygons
+		return polygons;
+	}
+
+	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, GameObject& obj)
+	{
+		std::vector<Polygon> polygons;
+		for (auto& modelPoly : modelPolys)
+		{
+			Polygon poly(modelPoly);
+			for (auto& x : poly.vertices)
+			{
+				x += obj.transform.Position; //account for offset of game OBJECT position in world space
+			}
+			polygons.push_back(poly);
+		}
+		return polygons;
 	}
 
 	BSPNode* BuildBSPTree(std::vector<Polygon*>& polygons, int depth)

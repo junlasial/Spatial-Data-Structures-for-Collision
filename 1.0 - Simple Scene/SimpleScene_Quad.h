@@ -76,6 +76,13 @@ private:
     bool newOctTree = false;
     int octTreeRenderDepth = 0;
     SpatialPartitioning::TreeNode* spatialPartitionTree;
+    SpatialPartitioning::BSPNode* BSPTree;
+    std::map<const char*, std::vector<SpatialPartitioning::Polygon>> modelPolys;
+    std::vector<SpatialPartitioning::Polygon> totalObjPolygons;
+    //std::vector<std::vector<SpatialPartitioning::Polygon>> objPolys;
+    int spatPartTree = 0;
+    bool BSPTreeEnabled = false;
+    bool renderBSPTree = true;
 };
 
 
