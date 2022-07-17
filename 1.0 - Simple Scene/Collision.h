@@ -7,8 +7,9 @@ namespace Collision
 	struct Collider{};
 	struct Plane : Collider
 	{
-		glm::vec3 m_Normal; //normalized
-		float m_d; // d = dot(n,p) for a given point p on the plane
+		glm::vec3 m_Normal{}; //normalized
+		float m_d{}; // d = dot(n,p) for a given point p on the plane
+		Plane() {};
 		Plane(glm::vec3 normal, float d) : m_Normal{ normal }, m_d {d} {}
 	};
 
