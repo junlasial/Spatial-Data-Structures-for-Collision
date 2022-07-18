@@ -1,5 +1,6 @@
 #include "SpatialPartitioning.h"
 #include <array>
+#include <random>
 
 #define MAX_DEPTH 7
 #define MIN_LEAF_SIZE 300
@@ -17,6 +18,10 @@ namespace SpatialPartitioning
 		TreeNode* pNode = new TreeNode(center, halfWidth, nullptr);
 		pNode->depth = level;
 		pNode->col = col; //render diff children diff col
+		std::random_device rd;
+		std::default_random_engine eng(rd());
+		std::uniform_real_distribution<float> distr(0.f, 1.f);
+		pNode->colour = glm::vec3(distr(eng), distr(eng), distr(eng));
 		glm::vec3 offset;
 		float step = halfWidth * 0.5f;
 		
@@ -37,6 +42,7 @@ namespace SpatialPartitioning
 		if (isThereObjInParent == false)
 			return pNode; //stop creating 8 subtrees
 
+		glm::vec3 childrenColours = glm::vec3(distr(eng), distr(eng), distr(eng)); //same depth
 		for (size_t i = 0; i < 8; i++)
 		{
 			// 3. Calculate new center and halfwidth
@@ -44,6 +50,8 @@ namespace SpatialPartitioning
 			offset.y = ((i & 2) ? step : -step);
 			offset.z = ((i & 4) ? step : -step);
 			pNode->pChildren[i] = BuildOctTree(center + offset, step, level - 1, ++col, objs);
+			if (pNode->pChildren[i])
+				pNode->pChildren[i]->colour = childrenColours;
 		}
 		return pNode;
 	}
@@ -64,7 +72,7 @@ namespace SpatialPartitioning
 			// Node straddles the child cells, so store it at parent level 
 			// Insert into this node’s list of objects
 			//newObject->depth = pNode->depth; //assign depth used for rendering later
-			newObject->depth = pNode->col; //assign depth used for rendering later (diff child diff colour)
+			newObject->octTreeNode = pNode; //assign depth used for rendering later (diff child diff colour)
 			pNode->pObjects.push_back(newObject);
 		}
 

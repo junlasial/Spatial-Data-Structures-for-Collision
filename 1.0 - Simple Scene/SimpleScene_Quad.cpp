@@ -77,6 +77,9 @@ void SimpleScene_Quad::CleanUp()
 	{
 		FreeTree(*tree);
 		delete tree;
+	}
+	if (spatialPartitionTree != nullptr)
+	{
 		FreeOctTree(spatialPartitionTree);
 	}
 }
@@ -117,7 +120,7 @@ int SimpleScene_Quad::Init()
 
 	//Initialise game objects
 	GameObject first;
-	first.SetTransform(Transform(glm::vec3{ -4.f, -1.f, -2.f }, 1.f));
+	first.SetTransform(Transform(glm::vec3{ -4.f, -2.f, -2.f }, 1.f));
 	first.SetModelID("4Sphere"); //Sphere object
 	gameObjList.push_back(first);
 	first.m_id = 0; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
@@ -141,7 +144,7 @@ int SimpleScene_Quad::Init()
 	fourth.m_id = 3; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
 
 	GameObject fifth;
-	fifth.SetTransform(Transform(glm::vec3{ -3.f, 4.5f, -5.5f }, 1.f));
+	fifth.SetTransform(Transform(glm::vec3{ -2.5f, 4.5f, -5.5f }, 1.f));
 	fifth.SetModelID("StarWars"); //Sphere object
 	gameObjList.push_back(fifth);
 	fifth.m_id = 4; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
@@ -174,19 +177,19 @@ int SimpleScene_Quad::Init()
 	miniMapCam.Zoom = 60.f;
 
 	//Get polygons from models
-	for (auto& model : models)
-	{
-		modelPolys.insert({ model.first, SpatialPartitioning::getPolygonsFromModel(model.second) });
-	}
+	//for (auto& model : models)
+	//{
+	//	modelPolys.insert({ model.first, SpatialPartitioning::getPolygonsFromModel(model.second) });
+	//}
 
 	//Get polygons for every game object, put in a single vector (COSTLY TO UPDATE EVERY VERTEX)
-	for (auto& obj : gameObjList)
-	{
-		std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
+	//for (auto& obj : gameObjList)
+	//{
+	//	std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
 
-		totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
+	//	totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
 
-	}
+	//}
 
 	return Scene::Init();
 }
@@ -648,27 +651,12 @@ int SimpleScene_Quad::Render()
 				glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
 				glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
 				glm::vec3 colour = glm::vec3(0.f, 1.f, 0.f);
-				if (OctTreeEnabled)
+				if (OctTreeEnabled && spatialPartitionTree)
 				{
-					colour = glm::vec3(1.f, 0.f, 0.f); //Red
-					if (gameObjs.depth == 0)
-						colour = glm::vec3(1.f, 0.f, 0.f); //Red
-					else if (gameObjs.depth == 1)
-						colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
-					else if (gameObjs.depth == 2)
-						colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
-					else if (gameObjs.depth == 3)
-						colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
-					else if (gameObjs.depth == 4)
-						colour = glm::vec3(0.f, 0.f, 1.f); //Blue
-					else if (gameObjs.depth == 5)
-						colour = glm::vec3(1.f, 0.f, 1.f); //Pink
-					else if (gameObjs.depth == 6)
-						colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
-					else if (gameObjs.depth == 7)
-						colour = glm::vec3(0.3f, 0.3f, 0.5f);
-					else if (gameObjs.depth == 8)
-						colour = glm::vec3(0.3f, 0.6f, 0.9f);
+					colour = glm::vec3(1.f, 0.f, 0.f);
+					SpatialPartitioning::TreeNode* node = static_cast<SpatialPartitioning::TreeNode*>(gameObjs.octTreeNode);
+					if (node->depth > 0)
+						colour = node->colour;
 				}
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 				//Draw
@@ -685,11 +673,9 @@ int SimpleScene_Quad::Render()
 				glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
 				glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
 				glm::vec3 colour = glm::vec3(0.f, 1.f, 0.f);
-				if (OctTreeEnabled)
+				if (OctTreeEnabled && spatialPartitionTree)
 				{
 					colour = glm::vec3(1.f, 0.f, 0.f); //Red
-					if (gameObjs.depth == 0)
-						colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
 				}
 
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
@@ -977,9 +963,9 @@ int SimpleScene_Quad::Render()
 				ImGui::Text("Render OctTree");
 				ImGui::Checkbox("##RenderOctTree", &renderOctTree);
 
-				ImGui::Text("OctTree Level (Max 1)");
+				ImGui::Text("OctTree Level (Max 3)");
 				ImGui::InputInt("##OctTreeDepth", &octTreeRenderDepth);
-				if (octTreeRenderDepth > 1) octTreeRenderDepth = 1;
+				if (octTreeRenderDepth > 3) octTreeRenderDepth = 3;
 				if (octTreeRenderDepth < 0) octTreeRenderDepth = 0;
 
 				ImGui::EndTabItem();
@@ -1099,24 +1085,32 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 	////TreeDepth 0 Root Node
 	glm::vec3 colour = glm::vec3(1.f, 0.f, 0.f); //Red
-	if (col == 0)
-		colour = glm::vec3(1.f, 0.f, 0.f); //Red
-	else if (col == 1)
-		colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
-	else if (col == 2)
-		colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
-	else if (col == 3)
-		colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
-	else if (col == 4)
-		colour = glm::vec3(0.f, 0.f, 1.f); //Blue
-	else if (col == 5)
-		colour = glm::vec3(1.f, 0.f, 1.f); //Pink
-	else if (col == 6)
-		colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
-	else if (col == 7)
-		colour = glm::vec3(0.3f, 0.3f, 0.5f);
-	else if (col == 8)
-		colour = glm::vec3(0.3f, 0.6f, 0.9f);
+
+	//Get random colours
+	if (col > 0)
+	{
+		//std::random_device rd;
+		//std::default_random_engine eng(rd());
+		//std::uniform_real_distribution<float> distr(0.f, 1.f);
+		colour = node->colour;
+	}
+
+	//else if (col == 1)
+	//	colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
+	//else if (col == 2)
+	//	colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
+	//else if (col == 3)
+	//	colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
+	//else if (col == 4)
+	//	colour = glm::vec3(0.f, 0.f, 1.f); //Blue
+	//else if (col == 5)
+	//	colour = glm::vec3(1.f, 0.f, 1.f); //Pink
+	//else if (col == 6)
+	//	colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
+	//else if (col == 7)
+	//	colour = glm::vec3(0.3f, 0.3f, 0.5f);
+	//else if (col == 8)
+	//	colour = glm::vec3(0.3f, 0.6f, 0.9f);
 
 	//	colour = glm::vec3(0.f, 0.f, 1.f);
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);

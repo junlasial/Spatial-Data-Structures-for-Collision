@@ -75,6 +75,7 @@ private:
     bool renderOctTree = true;
     bool newOctTree = false;
     int octTreeRenderDepth = 0;
+    bool octTreeColoured = false;
     SpatialPartitioning::TreeNode* spatialPartitionTree;
     SpatialPartitioning::BSPNode* BSPTree;
     std::map<const char*, std::vector<SpatialPartitioning::Polygon>> modelPolys;

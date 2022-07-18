@@ -13,7 +13,8 @@ namespace SpatialPartitioning
 		unsigned int depth;
 		TreeNode(glm::vec3 center, float halfWidth, TreeNode* childrenArray) :
 			center{ center }, halfwidth{ halfWidth }, pChildren{ childrenArray } {}
-		int col;
+		int col{};
+		glm::vec3 colour{};
 	};
 
 	TreeNode* BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<GameObject>& objs);
