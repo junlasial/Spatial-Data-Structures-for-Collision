@@ -754,7 +754,7 @@ int SimpleScene_Quad::Render()
 			float halfWidth = std::max(Max.x - Min.x, Max.y - Min.y);
 			halfWidth = std::max(Max.z - Min.z, halfWidth);
 			halfWidth *= 0.5f;
-			spatialPartitionTree = SpatialPartitioning::BuildOctTree(center, halfWidth, 1, 0);
+			spatialPartitionTree = SpatialPartitioning::BuildOctTree(center, halfWidth, 3, 0, gameObjList);
 
 			//Insert all the game Objs into the list
 			for (auto& obj : gameObjList)

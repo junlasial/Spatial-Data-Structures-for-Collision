@@ -2,15 +2,16 @@
 #include <array>
 
 #define MAX_DEPTH 7
-#define MIN_LEAF_SIZE 30
+#define MIN_LEAF_SIZE 300
 
 namespace SpatialPartitioning
 {
-	TreeNode* SpatialPartitioning::BuildOctTree(glm::vec3 center, float halfWidth, int level, int col)
+	TreeNode* SpatialPartitioning::BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<GameObject>& objs)
 	{
 		// Base case
-		if (level < 0)
+		if (level < 0) //max depth
 			return nullptr;
+		
 		// 1. Create new node Node( center, halfwidth )
 		// 2. Assign pChildren = nullptr, pObjects = nullptr
 		TreeNode* pNode = new TreeNode(center, halfWidth, nullptr);
@@ -18,13 +19,31 @@ namespace SpatialPartitioning
 		pNode->col = col; //render diff children diff col
 		glm::vec3 offset;
 		float step = halfWidth * 0.5f;
+		
+		bool isThereObjInParent = false;
+		for (auto& obj : objs)
+		{
+			if (isThereObjInParent)
+				break;
+			Collision::AABB parentAABB(center + halfWidth * glm::vec3(-1.f, -1.f, -1.f), center + halfWidth * glm::vec3(1.f, 1.f, 1.f));
+
+			if (Collision::AABBAABB(parentAABB, obj.aabbBV))
+			{
+				isThereObjInParent = true;
+				break;
+			}
+		}
+
+		if (isThereObjInParent == false)
+			return pNode; //stop creating 8 subtrees
+
 		for (size_t i = 0; i < 8; i++)
 		{
 			// 3. Calculate new center and halfwidth
 			offset.x = ((i & 1) ? step : -step);
 			offset.y = ((i & 2) ? step : -step);
 			offset.z = ((i & 4) ? step : -step);
-			pNode->pChildren[i] = BuildOctTree(center + offset, step, level - 1, ++col);
+			pNode->pChildren[i] = BuildOctTree(center + offset, step, level - 1, ++col, objs);
 		}
 		return pNode;
 	}
