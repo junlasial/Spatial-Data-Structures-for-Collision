@@ -126,13 +126,13 @@ int SimpleScene_Quad::Init()
 	first.m_id = 0; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
 
 	GameObject second;
-	second.SetTransform(Transform(glm::vec3{ 1.5, 0.f, -2.5f }, 1.f));
+	second.SetTransform(Transform(glm::vec3{ 1.5, -.2f, -2.5f }, 1.f));
 	second.SetModelID("Bunny"); //Sphere object
 	gameObjList.push_back(second);
 	second.m_id = 1; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
 
 	GameObject third;
-	third.SetTransform(Transform(glm::vec3{ -2.f, 1.f, -4.f }, 1.f));
+	third.SetTransform(Transform(glm::vec3{ -2.f, 0.f, -4.f }, 1.f));
 	third.SetModelID("StarWars"); //Sphere object
 	gameObjList.push_back(third);
 	third.m_id = 2; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
