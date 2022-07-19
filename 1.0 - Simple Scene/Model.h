@@ -44,7 +44,7 @@ public:
     void loadTriangle();
     void updateRay(Vertex finalPoint);
 
-    void loadBSPPolygons(std::vector<SpatialPartitioning::Polygon>& polygons);
+    void loadBSPPolygons(const std::vector<SpatialPartitioning::Polygon>& polygons);
     // draws the model, and thus all its meshes
     void Draw();
     void GenericDraw();

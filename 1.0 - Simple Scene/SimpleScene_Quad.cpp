@@ -10,6 +10,7 @@
 #include "Transform.h"
 #include "Collision.h"
 #include "BoundingVolume.h"
+#include <random>
 
 bool renderBVHSphere = false;
 int indexOfTreeInt = 0;
@@ -124,7 +125,7 @@ int SimpleScene_Quad::Init()
 
 	//Initialise game objects
 	GameObject first;
-	first.SetTransform(Transform(glm::vec3{ -4.f, -2.f, -2.f }, 1.f));
+	first.SetTransform(Transform(glm::vec3{ -4.f, -1.f, -2.f }, 1.f));
 	first.SetModelID("4Sphere"); //Sphere object
 	gameObjList.push_back(first);
 	first.m_id = 0; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
@@ -136,7 +137,7 @@ int SimpleScene_Quad::Init()
 	second.m_id = 1; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
 
 	GameObject third;
-	third.SetTransform(Transform(glm::vec3{ -2.f, 0.f, -4.f }, 1.f));
+	third.SetTransform(Transform(glm::vec3{ -1.f, 0.f, -4.f }, 1.f));
 	third.SetModelID("StarWars"); //Sphere object
 	gameObjList.push_back(third);
 	third.m_id = 2; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
@@ -148,19 +149,19 @@ int SimpleScene_Quad::Init()
 	fourth.m_id = 3; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
 
 	GameObject fifth;
-	fifth.SetTransform(Transform(glm::vec3{ -2.5f, 4.5f, -5.5f }, 1.f));
+	fifth.SetTransform(Transform(glm::vec3{ -1.5f, 4.5f, -5.5f }, 1.f));
 	fifth.SetModelID("StarWars"); //Sphere object
 	gameObjList.push_back(fifth);
 	fifth.m_id = 4; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
 
 	GameObject sixth;
-	sixth.SetTransform(Transform(glm::vec3{ -4.f, 1.5f, -6.f }, 1.f));
+	sixth.SetTransform(Transform(glm::vec3{ -2.f, 1.5f, -6.f }, 1.f));
 	sixth.SetModelID("LucyPrinceton"); //Sphere object
 	gameObjList.push_back(sixth);
 	sixth.m_id = 5; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
 
 	GameObject seventh;
-	seventh.SetTransform(Transform(glm::vec3{ -5.f, 2.5f, -3.5f }, 1.f));
+	seventh.SetTransform(Transform(glm::vec3{ -3.f, 2.5f, -3.5f }, 1.f));
 	seventh.SetModelID("Bunny"); //Sphere object
 	gameObjList.push_back(seventh);
 	seventh.m_id = 6; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
@@ -195,16 +196,10 @@ int SimpleScene_Quad::Init()
 
 	}
 
-
-	for (auto& poly : totalObjPolygons)
-	{
-		ptotalObjPolygons.push_back(&poly);
-	}
-
-	Model polygonModels;
-	polygonModels.loadBSPPolygons(totalObjPolygons);
-	models.emplace("BSPPolygons", polygonModels);
-	intModelID.emplace(7, "BSPPolygons");
+	//Model polygonModels;
+	//polygonModels.loadBSPPolygons(totalObjPolygons);
+	//models.emplace("BSPPolygons", polygonModels);
+	//intModelID.emplace(7, "BSPPolygons");
 
 	return Scene::Init();
 }
@@ -643,9 +638,10 @@ int SimpleScene_Quad::Render()
 		glUniform3f(fCamPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
 		glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), false);
 		//Render the model of the gameObjs
-		models[gameObjs.GetModelID()].Draw();
+		if (!BSPTreeEnabled)
+			models[gameObjs.GetModelID()].Draw();
 
-		if (renderBV)
+		if (renderBV && !BSPTreeEnabled)
 		{
 			//Render the model of the Bounding Volume
 			if (gameObjs.colliderName == "AABB")
@@ -774,14 +770,14 @@ int SimpleScene_Quad::Render()
 	{
 		if (BSPTree == nullptr)
 		{
-			BSPTree = SpatialPartitioning::BuildBSPTree(ptotalObjPolygons, 0);
+			BSPTree = SpatialPartitioning::BuildBSPTree(totalObjPolygons, 0);
 
 
 		}
 		else
 		{
 			if (renderBSPTree)
-				RenderBSPTree(BSPTree, projection, view, 0);
+				RenderBSPTree(BSPTree, projection, view);
 		}
 	}
 	else
@@ -1115,13 +1111,12 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 	}
 }
 
-void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view, int col)
+void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view)
 {
 	SpatialPartitioning::BSPNode* node = tree;
 	if (node == nullptr)
 		return;
 
-	
 	glm::mat4 objTrans = projection * view * glm::mat4(1.0f);
 	// Uniform transformation (vertex shader)
 	GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
@@ -1130,12 +1125,19 @@ void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const g
 
 	GLint fCamPosLoc = glGetUniformLocation(programID, "cameraPos");
 	glUniform3f(fCamPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
-	glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), false);
+	glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
 
 	glm::vec3 colour{ 0.f, 1.f, 0.f };
+	//std::random_device rd;
+	//std::default_random_engine eng(rd());
+	//std::uniform_real_distribution<float> distr(0.f, 1.f);
+	//colour = glm::vec3(distr(eng), distr(eng), distr(eng));
+	colour = node->colour;
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
-	models["BSPPolygons"].GenericDrawTriangle();
+	node->geometry.GenericDrawTriangle();
 
+	RenderBSPTree(node->frontTree, projection, view);
+	RenderBSPTree(node->backTree, projection, view);
 }
 
 void SimpleScene_Quad::FreeTree(BVHierarchy::Node* node)

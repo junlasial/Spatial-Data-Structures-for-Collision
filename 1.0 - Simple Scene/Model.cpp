@@ -154,7 +154,7 @@ void Model::updateRay(Vertex finalPoint)
     
 }
 
-void Model::loadBSPPolygons(std::vector<SpatialPartitioning::Polygon>& polygons)
+void Model::loadBSPPolygons(const std::vector<SpatialPartitioning::Polygon>& polygons)
 {
     vector<Vertex> vertices;
     for (auto& poly : polygons)

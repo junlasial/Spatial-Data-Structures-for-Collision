@@ -25,6 +25,7 @@ namespace SpatialPartitioning
 	{
 		std::vector<glm::vec3> vertices;
 		//std::vector<unsigned int> indices;
+		Polygon() {};
 		Polygon(std::vector<glm::vec3>& vertices) : vertices { vertices } {}
 	};
 
@@ -35,13 +36,16 @@ namespace SpatialPartitioning
 			INTERNAL,
 			LEAF
 		};
-		std::vector<Polygon*> geometry{}; //leaf nodes need to store geometry data
+		//std::vector<Polygon*> geometry{}; 
+		Model geometry; //leaf nodes need to store geometry data
 		BSPNode* frontTree{}; //child node
 		BSPNode* backTree{}; //child node
 		unsigned int depth{}; //depth
-		BSPNode(BSPNode* front, BSPNode* back) :
-			frontTree{ front }, backTree{ back } {}
-		BSPNode(std::vector<Polygon*>& polygons) : geometry{ polygons } {} // create a leaf node
+		glm::vec3 colour;
+		BSPNode(BSPNode* front, BSPNode* back, glm::vec3 col) :
+			frontTree{ front }, backTree{ back }, colour{ col }{}
+
+		BSPNode(const std::vector<Polygon>& polygons, glm::vec3 col);// create a leaf node
 	};
 	
 	enum class POINT_ATTRIB
@@ -63,12 +67,12 @@ namespace SpatialPartitioning
 	std::vector<Polygon> getPolygonsFromModel(const Model& model);
 	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, GameObject& obj);
 
-	Collision::Plane GetPlaneFromPolygon(Polygon* poly);
-	POLYGON_ATTRIB ClassifyPolygonToPlane(Polygon* poly, Collision::Plane plane);
-	Collision::Plane PickSplittingPlane(std::vector<Polygon*>& polygons);
-	void SplitPolygon(Polygon& poly, Collision::Plane plane, Polygon** frontPoly, Polygon** backPoly);
+	Collision::Plane GetPlaneFromPolygon(Polygon poly);
+	POLYGON_ATTRIB ClassifyPolygonToPlane(Polygon poly, Collision::Plane plane);
+	Collision::Plane PickSplittingPlane(const std::vector<Polygon>& polygons);
+	void SplitPolygon(Polygon& poly, Collision::Plane plane, Polygon& frontPoly, Polygon& backPoly);
 
 
-	BSPNode* BuildBSPTree(std::vector<Polygon*>& polygons, int depth);
+	BSPNode* BuildBSPTree(const std::vector<Polygon>& polygons, int depth);
 	
 }
