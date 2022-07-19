@@ -17,8 +17,12 @@
 #include <iostream>
 #include <map>
 #include <vector>
-using namespace std;
 
+using namespace std;
+namespace SpatialPartitioning
+{
+    struct Polygon;
+}
 class Model
 {
 public:
@@ -39,6 +43,8 @@ public:
     void loadRay();
     void loadTriangle();
     void updateRay(Vertex finalPoint);
+
+    void loadBSPPolygons(std::vector<SpatialPartitioning::Polygon>& polygons);
     // draws the model, and thus all its meshes
     void Draw();
     void GenericDraw();

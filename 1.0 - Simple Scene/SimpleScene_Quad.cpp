@@ -82,6 +82,10 @@ void SimpleScene_Quad::CleanUp()
 	{
 		FreeOctTree(spatialPartitionTree);
 	}
+	if (BSPTree != nullptr)
+	{
+		FreeBSPTree(BSPTree);
+	}
 }
 
 //////////////////////////////////////////////////////
@@ -177,19 +181,30 @@ int SimpleScene_Quad::Init()
 	miniMapCam.Zoom = 60.f;
 
 	//Get polygons from models
-	//for (auto& model : models)
-	//{
-	//	modelPolys.insert({ model.first, SpatialPartitioning::getPolygonsFromModel(model.second) });
-	//}
+	for (auto& model : models)
+	{
+		modelPolys.insert({ model.first, SpatialPartitioning::getPolygonsFromModel(model.second) });
+	}
 
 	//Get polygons for every game object, put in a single vector (COSTLY TO UPDATE EVERY VERTEX)
-	//for (auto& obj : gameObjList)
-	//{
-	//	std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
+	for (auto& obj : gameObjList)
+	{
+		std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
 
-	//	totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
+		totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
 
-	//}
+	}
+
+
+	for (auto& poly : totalObjPolygons)
+	{
+		ptotalObjPolygons.push_back(&poly);
+	}
+
+	Model polygonModels;
+	polygonModels.loadBSPPolygons(totalObjPolygons);
+	models.emplace("BSPPolygons", polygonModels);
+	intModelID.emplace(7, "BSPPolygons");
 
 	return Scene::Init();
 }
@@ -759,16 +774,14 @@ int SimpleScene_Quad::Render()
 	{
 		if (BSPTree == nullptr)
 		{
-
-			//BSPTree = SpatialPartitioning::BuildBSPTree(totalObjPolygons, 0);
-
+			BSPTree = SpatialPartitioning::BuildBSPTree(ptotalObjPolygons, 0);
 
 
 		}
 		else
 		{
-			if (renderBSPTree);
-				//render BSP Tree
+			if (renderBSPTree)
+				RenderBSPTree(BSPTree, projection, view, 0);
 		}
 	}
 	else
@@ -1086,44 +1099,43 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 	////TreeDepth 0 Root Node
 	glm::vec3 colour = glm::vec3(1.f, 0.f, 0.f); //Red
 
-	//Get random colours
+	//Get nodes' colours
 	if (col > 0)
 	{
-		//std::random_device rd;
-		//std::default_random_engine eng(rd());
-		//std::uniform_real_distribution<float> distr(0.f, 1.f);
 		colour = node->colour;
 	}
 
-	//else if (col == 1)
-	//	colour = glm::vec3(1.f, 0.5f, 0.f); //Orange
-	//else if (col == 2)
-	//	colour = glm::vec3(1.f, 1.f, 0.f); //Yellow
-	//else if (col == 3)
-	//	colour = glm::vec3(0.f, 1.f, 1.f); //Light Blue
-	//else if (col == 4)
-	//	colour = glm::vec3(0.f, 0.f, 1.f); //Blue
-	//else if (col == 5)
-	//	colour = glm::vec3(1.f, 0.f, 1.f); //Pink
-	//else if (col == 6)
-	//	colour = glm::vec3(0.5f, 0.5f, 0.5f); //Grey
-	//else if (col == 7)
-	//	colour = glm::vec3(0.3f, 0.3f, 0.5f);
-	//else if (col == 8)
-	//	colour = glm::vec3(0.3f, 0.6f, 0.9f);
-
-	//	colour = glm::vec3(0.f, 0.f, 1.f);
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 	//Draw
-	//if (renderBVHSphere)
-	//	models["Sphere"].DrawBoundingVolume();
-	//else 
 	models["Cube"].DrawBoundingVolume();
 
 	for (size_t i = 0; i < 8; i++)
 	{
 		RenderOctTree(node->pChildren[i], projection, view, ++col); //Recursive call for all the children
 	}
+}
+
+void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view, int col)
+{
+	SpatialPartitioning::BSPNode* node = tree;
+	if (node == nullptr)
+		return;
+
+	
+	glm::mat4 objTrans = projection * view * glm::mat4(1.0f);
+	// Uniform transformation (vertex shader)
+	GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
+	glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
+	
+
+	GLint fCamPosLoc = glGetUniformLocation(programID, "cameraPos");
+	glUniform3f(fCamPosLoc, camera.Position.x, camera.Position.y, camera.Position.z);
+	glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), false);
+
+	glm::vec3 colour{ 0.f, 1.f, 0.f };
+	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
+	models["BSPPolygons"].GenericDrawTriangle();
+
 }
 
 void SimpleScene_Quad::FreeTree(BVHierarchy::Node* node)
@@ -1145,5 +1157,17 @@ void SimpleScene_Quad::FreeOctTree(SpatialPartitioning::TreeNode* node)
 	{
 		FreeOctTree(node->pChildren[i]); //Free all children
 	}
+	delete node;
+}
+
+void SimpleScene_Quad::FreeBSPTree(SpatialPartitioning::BSPNode* node)
+{
+	if (node == nullptr)
+		return;
+	if (node->frontTree)
+		FreeBSPTree(node->frontTree);
+	if (node->backTree)
+		FreeBSPTree(node->backTree);
+
 	delete node;
 }

@@ -42,8 +42,10 @@ public:
     inline Camera* GetCamera() { return &camera; }
     void RenderTree(BVHierarchy::Node** tree, const glm::mat4& projection, const glm::mat4& view);
     void RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col);
+    void RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view, int col);
     void FreeTree(BVHierarchy::Node* node);
     void FreeOctTree(SpatialPartitioning::TreeNode* node);
+    void FreeBSPTree(SpatialPartitioning::BSPNode* node);
 private:
 
     // member functions
@@ -80,6 +82,7 @@ private:
     SpatialPartitioning::BSPNode* BSPTree;
     std::map<const char*, std::vector<SpatialPartitioning::Polygon>> modelPolys;
     std::vector<SpatialPartitioning::Polygon> totalObjPolygons;
+    std::vector<SpatialPartitioning::Polygon*> ptotalObjPolygons;
     //std::vector<std::vector<SpatialPartitioning::Polygon>> objPolys;
     int spatPartTree = 0;
     bool BSPTreeEnabled = false;

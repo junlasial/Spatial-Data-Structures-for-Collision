@@ -168,7 +168,9 @@ namespace SpatialPartitioning
 		Collision::Plane bestPlane;
 		float bestScore = FLT_MAX;
 		// Try the plane of each polygon as a dividing plane
-		for (int i = 0; i < polygons.size(); i++) {
+		//Incremental
+		int increment = (int)(polygons.size() / 20); //speed things up (NON-OPTIMAL though)
+		for (int i = 0; i < polygons.size(); i += increment) {
 			int numInFront = 0, numBehind = 0, numStraddling = 0;
 			Collision::Plane plane = GetPlaneFromPolygon(polygons[i]);
 			// Test against all other polygons

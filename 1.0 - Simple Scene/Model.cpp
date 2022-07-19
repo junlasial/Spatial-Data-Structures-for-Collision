@@ -1,4 +1,5 @@
 #include "Model.h"
+#include "SpatialPartitioning.h"
 
 Model::Model(std::string const& path, bool gamma) : gammaCorrection(gamma)
 {
@@ -151,6 +152,21 @@ void Model::updateRay(Vertex finalPoint)
     meshes[2].vertices = vertices;
     meshes[2].UpdateGenericMesh();
     
+}
+
+void Model::loadBSPPolygons(std::vector<SpatialPartitioning::Polygon>& polygons)
+{
+    vector<Vertex> vertices;
+    for (auto& poly : polygons)
+    {
+        for (auto& v : poly.vertices)
+            vertices.push_back({ v });
+    }
+
+    Mesh polyMesh{};
+    polyMesh.vertices = vertices;
+    polyMesh.setupGenericMesh();
+    meshes.push_back(polyMesh);
 }
 
 void Model::updateTriangle(std::vector<Vertex>& newVertices)
