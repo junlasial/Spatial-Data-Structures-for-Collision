@@ -38,14 +38,18 @@ namespace SpatialPartitioning
 		};
 		//std::vector<Polygon*> geometry{}; 
 		Model geometry; //leaf nodes need to store geometry data
+		Type currType{};
 		BSPNode* frontTree{}; //child node
 		BSPNode* backTree{}; //child node
 		unsigned int depth{}; //depth
-		glm::vec3 colour;
-		BSPNode(BSPNode* front, BSPNode* back, glm::vec3 col) :
-			frontTree{ front }, backTree{ back }, colour{ col }{}
+		glm::vec3 colour{};
+		BSPNode(BSPNode* front, BSPNode* back) :
+			frontTree{ front }, backTree{ back }
+		{
+			currType = Type::INTERNAL;
+		}
 
-		BSPNode(const std::vector<Polygon>& polygons, glm::vec3 col);// create a leaf node
+		BSPNode(const std::vector<Polygon>& polygons);// create a leaf node
 	};
 	
 	enum class POINT_ATTRIB

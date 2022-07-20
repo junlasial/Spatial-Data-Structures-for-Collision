@@ -3,7 +3,7 @@
 #include <random>
 
 #define MAX_DEPTH 8
-#define MIN_LEAF_SIZE 300
+#define MIN_LEAF_SIZE 30
 
 namespace SpatialPartitioning
 {
@@ -105,12 +105,13 @@ namespace SpatialPartitioning
 	// Classify point p to a plane thickened by a given thickness epsilon
 	POINT_ATTRIB ClassifyPointToPlane(glm::vec3 p, Collision::Plane plane)
 	{
+		constexpr float PLANE_THICKNESS_EPSILON = 0.1f;
 		// Compute signed distance of point from plane
-		float dist = glm::dot(plane.m_Normal, p) - plane.m_d;
+		float dist = glm::dot(plane.m_Normal, p);
 		// Classify p based on the signed distance
-		if (dist > 0.001f)
+		if (dist > plane.m_d + PLANE_THICKNESS_EPSILON)
 			return POINT_ATTRIB::POINT_IN_FRONT_OF_PLANE;
-		if (dist < -0.001f)
+		if (dist < plane.m_d  - PLANE_THICKNESS_EPSILON)
 			return POINT_ATTRIB::POINT_BEHIND_PLANE;
 		return POINT_ATTRIB::POINT_ON_PLANE;
 	}
@@ -154,7 +155,7 @@ namespace SpatialPartitioning
 		//Assuming that all points in poly lie on a single plane
 		glm::vec3 dir1 = poly.vertices[0] - poly.vertices[1];
 		glm::vec3 dir2 = poly.vertices[0] - poly.vertices[2];
-		glm::vec3 normal = glm::cross(dir1, dir2);
+		glm::vec3 normal = glm::normalize(glm::cross(dir1, dir2));
 		Collision::Plane plane(normal, glm::dot(normal, poly.vertices[0]));
 		return plane;
 	}
@@ -169,7 +170,7 @@ namespace SpatialPartitioning
 		float bestScore = FLT_MAX;
 		// Try the plane of each polygon as a dividing plane
 		//Incremental
-		int increment = (int)(polygons.size() / 10); //speed things up (NON-OPTIMAL though)
+		int increment = (polygons.size() / 10); //speed things up (NON-OPTIMAL though)
 		for (int i = 0; i < polygons.size(); i += increment) {
 			int numInFront = 0, numBehind = 0, numStraddling = 0;
 			//if (i == 10)
@@ -220,7 +221,6 @@ namespace SpatialPartitioning
 
 	void SplitPolygon(Polygon& poly, Collision::Plane plane, Polygon& frontPoly, Polygon& backPoly)
 	{
-		int numFront = 0, numBack = 0;
 		std::vector<glm::vec3> frontVerts;
 		std::vector<glm::vec3> backVerts;
 		// Test all edges (a, b) starting with edge from last to first vertex
@@ -312,7 +312,7 @@ namespace SpatialPartitioning
 			Polygon poly(modelPoly);
 			for (auto& x : poly.vertices)
 			{
-				x += obj.transform.Position; //account for offset of game OBJECT position in world space
+				x += obj.transform.Position; //account for offset of game OBJECT position in world space (assumes no scaling, rotation)
 			}
 			polygons.push_back(poly);
 		}
@@ -324,22 +324,16 @@ namespace SpatialPartitioning
 		// Return NULL tree if there are no polygons
 		if (polygons.empty()) return NULL;
 		// Get number of polygons in the input vector
-		int numPolygons = polygons.size();
-
-		std::random_device rd;
-		std::default_random_engine eng(rd());
-		std::uniform_real_distribution<float> distr(0.f, 1.f);
-		glm::vec3 node_colour = glm::vec3(distr(eng), distr(eng), distr(eng));
 
 		// If criterion for a leaf is matched, create a leaf node from remaining polygons
-		if (depth >= MAX_DEPTH || numPolygons <= MIN_LEAF_SIZE) //|| ...etc...)
-		return new BSPNode(polygons, node_colour);
+		if (polygons.size() <= MIN_LEAF_SIZE) //|| ...etc...)
+		return new BSPNode(polygons);
 		// Select best possible partitioning plane based on the input geometry
 		Collision::Plane splitPlane = PickSplittingPlane(polygons);
 		std::vector<Polygon> frontList, backList;
 		// Test each polygon against the dividing plane, adding them
 		// to the front list, back list, or both, as appropriate
-		for (int i = 0; i < numPolygons; i++) {
+		for (int i = 0; i < polygons.size(); i++) {
 			Polygon poly = polygons[i], frontPart, backPart;
 			switch (ClassifyPolygonToPlane(poly, splitPlane)) {
 				case POLYGON_ATTRIB::POLYGON_COPLANAR_WITH_PLANE:
@@ -363,18 +357,29 @@ namespace SpatialPartitioning
 					break;
 			}
 		}
+
+		// Not even being split case
+		if (backList.size() == polygons.size() || frontList.size() == polygons.size())
+			return new BSPNode(polygons); //leaf case
+
 		// Recursively build child subtrees and return new tree root combining them
 		BSPNode* frontTree = BuildBSPTree(frontList, depth + 1);
 		BSPNode* backTree = BuildBSPTree(backList, depth + 1);
-		return new BSPNode(frontTree, backTree, node_colour);
+
+		return new BSPNode(frontTree, backTree);
 	}
 
-	BSPNode::BSPNode(const std::vector<Polygon>& polygons, glm::vec3 col)
-		: colour{ col }
+	BSPNode::BSPNode(const std::vector<Polygon>& polygons) //Leaf nodes
 	{
 		Model polygonData;
 		polygonData.loadBSPPolygons(polygons);
+		this->currType = Type::LEAF;
 		this->geometry = polygonData;
+
+		std::random_device rd;
+		std::default_random_engine eng(rd());
+		std::uniform_real_distribution<float> distr(0.1f, 1.f);
+		this->colour = glm::vec3(distr(eng), distr(eng), distr(eng));
 	}
 
 }
