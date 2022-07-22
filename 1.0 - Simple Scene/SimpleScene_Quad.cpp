@@ -17,6 +17,7 @@ int indexOfTreeInt = 0;
 float nearestNeighbourWeight = 0.6f;
 float combinedVolWeight = 0.3f;
 float relVolIncreaseWeight = 0.1f;
+int minPolyCount = 30;
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 void SimpleScene_Quad::SetupNanoGUI(GLFWwindow* pWindow)
@@ -771,8 +772,6 @@ int SimpleScene_Quad::Render()
 		if (BSPTree == nullptr)
 		{
 			BSPTree = SpatialPartitioning::BuildBSPTree(totalObjPolygons, 0);
-
-
 		}
 		else
 		{
@@ -953,6 +952,21 @@ int SimpleScene_Quad::Render()
 			}
 			if (ImGui::BeginTabItem("Spatial Partitioning"))
 			{
+				ImGui::Text("Click to rebuild tree");
+				if (ImGui::Button("Update Tree"))
+				{
+					if (spatialPartitionTree != nullptr)
+					{
+						FreeOctTree(spatialPartitionTree);
+						spatialPartitionTree = nullptr;
+					}
+					if (BSPTree != nullptr)
+					{
+						FreeBSPTree(BSPTree);
+						BSPTree = nullptr;
+					}
+				}
+
 				static const char* items[]{ "OctTree", "BSPTree" };
 				ImGui::NewLine();
 				ImGui::Text("Trees");
@@ -976,6 +990,13 @@ int SimpleScene_Quad::Render()
 				ImGui::InputInt("##OctTreeDepth", &octTreeRenderDepth);
 				if (octTreeRenderDepth > 3) octTreeRenderDepth = 3;
 				if (octTreeRenderDepth < 0) octTreeRenderDepth = 0;
+
+				ImGui::Text("Render BSPTree");
+				ImGui::Checkbox("##RenderBSPTree", &renderBSPTree);
+
+				ImGui::Text("Minimum Polygon Count");
+				ImGui::SameLine();
+				ImGui::DragInt("##MinPolyCount", &minPolyCount, 1, 30, 300);
 
 				ImGui::EndTabItem();
 			}

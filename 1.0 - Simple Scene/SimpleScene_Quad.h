@@ -95,4 +95,6 @@ extern int indexOfTreeInt;
 extern float nearestNeighbourWeight;
 extern float combinedVolWeight;
 extern float relVolIncreaseWeight;
+
+extern int minPolyCount;
 #endif //SIMPLE_SCENE_SIMPLESCENE_QUAD_H

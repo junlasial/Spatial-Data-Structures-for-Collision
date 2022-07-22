@@ -1,6 +1,7 @@
 #include "SpatialPartitioning.h"
 #include <array>
 #include <random>
+#include "SimpleScene_Quad.h"
 
 #define MAX_DEPTH 8
 #define MIN_LEAF_SIZE 30
@@ -326,7 +327,7 @@ namespace SpatialPartitioning
 		// Get number of polygons in the input vector
 
 		// If criterion for a leaf is matched, create a leaf node from remaining polygons
-		if (polygons.size() <= MIN_LEAF_SIZE) //|| ...etc...)
+		if (polygons.size() <= minPolyCount) //|| ...etc...)
 		return new BSPNode(polygons);
 		// Select best possible partitioning plane based on the input geometry
 		Collision::Plane splitPlane = PickSplittingPlane(polygons);
