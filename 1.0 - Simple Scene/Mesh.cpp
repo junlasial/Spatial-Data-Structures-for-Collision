@@ -51,6 +51,7 @@ void Mesh::DrawBoundingVolume()
 void Mesh::GenericDrawTriangle()
 {
     // draw mesh
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
     glBindVertexArray(0);

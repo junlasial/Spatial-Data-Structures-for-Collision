@@ -4,30 +4,35 @@
 
 namespace SpatialPartitioning
 {
-	struct TreeNode
-	{
-		glm::vec3 center;
-		float halfwidth;
-		TreeNode* pChildren[8];
-		std::vector<GameObject*> pObjects{};
-		unsigned int depth;
-		TreeNode(glm::vec3 center, float halfWidth, TreeNode* childrenArray) :
-			center{ center }, halfwidth{ halfWidth }, pChildren{ childrenArray } {}
-		int col{};
-		glm::vec3 colour{};
-	};
-
-	TreeNode* BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<GameObject>& objs);
-	int InsertIntoOctTree(TreeNode* pNode, GameObject* newObject);
-	std::pair<int, bool> getChildIndex(TreeNode* pNode, GameObject* newObject);
-
 	struct Polygon //should be just triangles
 	{
 		std::vector<glm::vec3> vertices;
 		//std::vector<unsigned int> indices;
 		Polygon() {};
-		Polygon(std::vector<glm::vec3>& vertices) : vertices { vertices } {}
+		Polygon(std::vector<glm::vec3>& vertices) : vertices{ vertices } {}
 	};
+
+	std::vector<Polygon> getPolygonsFromModel(const Model& model);
+	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, GameObject& obj);
+
+	struct TreeNode
+	{
+		glm::vec3 center;
+		float halfwidth;
+		TreeNode* pChildren[8];
+		Model geometry; //store geometry data
+		//std::vector<GameObject*> pObjects{};
+		unsigned int depth;
+		TreeNode(glm::vec3 center, float halfWidth, TreeNode* childrenArray) :
+			center{ center }, halfwidth{ halfWidth }, pChildren{ childrenArray } {}
+		int col{};
+
+		glm::vec3 colour{};
+	};
+
+	TreeNode* BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<Polygon>& objs);
+	int InsertIntoOctTree(TreeNode* pNode, const std::vector<Polygon>& objpolys);
+
 
 	struct BSPNode
 	{
@@ -67,9 +72,6 @@ namespace SpatialPartitioning
 		POLYGON_BEHIND_PLANE,
 		POLYGON_COPLANAR_WITH_PLANE
 	};
-
-	std::vector<Polygon> getPolygonsFromModel(const Model& model);
-	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, GameObject& obj);
 
 	Collision::Plane GetPlaneFromPolygon(Polygon poly);
 	POLYGON_ATTRIB ClassifyPolygonToPlane(Polygon poly, Collision::Plane plane);

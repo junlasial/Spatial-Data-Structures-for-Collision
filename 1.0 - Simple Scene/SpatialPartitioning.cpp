@@ -8,12 +8,12 @@
 
 namespace SpatialPartitioning
 {
-	TreeNode* SpatialPartitioning::BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<GameObject>& objs)
+	TreeNode* SpatialPartitioning::BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<Polygon>& polys)
 	{
 		// Base case
 		if (level < 0) //max depth
 			return nullptr;
-		
+
 		// 1. Create new node Node( center, halfwidth )
 		// 2. Assign pChildren = nullptr, pObjects = nullptr
 		TreeNode* pNode = new TreeNode(center, halfWidth, nullptr);
@@ -25,15 +25,16 @@ namespace SpatialPartitioning
 		pNode->colour = glm::vec3(distr(eng), distr(eng), distr(eng));
 		glm::vec3 offset;
 		float step = halfWidth * 0.5f;
-		
+
 		bool isThereObjInParent = false;
-		for (auto& obj : objs)
+		for (auto& poly : polys)
 		{
 			if (isThereObjInParent)
 				break;
 			Collision::AABB parentAABB(center + halfWidth * glm::vec3(-1.f, -1.f, -1.f), center + halfWidth * glm::vec3(1.f, 1.f, 1.f));
 
-			if (Collision::AABBAABB(parentAABB, obj.aabbBV))
+			Collision::Triangle tri(poly.vertices[0], poly.vertices[1], poly.vertices[2]);
+			if (Collision::TriangleAABB(tri, parentAABB))
 			{
 				isThereObjInParent = true;
 				break;
@@ -50,57 +51,74 @@ namespace SpatialPartitioning
 			offset.x = ((i & 1) ? step : -step);
 			offset.y = ((i & 2) ? step : -step);
 			offset.z = ((i & 4) ? step : -step);
-			pNode->pChildren[i] = BuildOctTree(center + offset, step, level - 1, ++col, objs);
+			pNode->pChildren[i] = BuildOctTree(center + offset, step, level - 1, ++col, polys);
 			if (pNode->pChildren[i])
 				pNode->pChildren[i]->colour = childrenColours;
 		}
 		return pNode;
 	}
 
-	int InsertIntoOctTree(TreeNode* pNode, GameObject* newObject)
+	int InsertIntoOctTree(TreeNode* pNode, const std::vector<Polygon>& objpolys)
 	{
+		int index = 0, straddle = 0;
+		int numberOfNodesIntersected = 0;
+		// Compute the octant number [0..7] the object sphere center is in
+		// If straddling any of the dividing x, y, or z planes, exit directly
+
 		// Calculate which child cell the center of newObject is in
 		// Check if newObject straddles multiple child nodes
-		std::pair<int, bool> result = getChildIndex(pNode, newObject);
-		if (!result.second && pNode->pChildren[result.first]) //if doesnt straddle
+		if (objpolys.size() > minPolyCount) //Terminating criteria, split into smaller inserts
+		{
+			size_t halfSize = objpolys.size() / 2;
+			std::vector<Polygon> objpolys1 (objpolys.begin(), objpolys.begin() + halfSize);
+			std::vector<Polygon> objpolys2 (objpolys.begin() + halfSize, objpolys.end());
+			InsertIntoOctTree(pNode, objpolys1);
+			InsertIntoOctTree(pNode, objpolys2);
+		}
+		
+		for (size_t i = 0; i < 8; i++)
+		{
+			if (straddle) break;
+			if (pNode->pChildren[i] == nullptr) break;
+			for (auto& poly : objpolys) //check if all the polygons are intersecting the child node
+			{
+				Collision::Triangle polyTri(poly.vertices[0], poly.vertices[1], poly.vertices[2]);
+
+				Collision::AABB nodeAABB(pNode->pChildren[i]->center + pNode->pChildren[i]->halfwidth * glm::vec3(-1.f, -1.f, -1.f), pNode->pChildren[i]->center + pNode->pChildren[i]->halfwidth * glm::vec3(1.f, 1.f, 1.f));
+
+				if (Collision::TriangleAABB(polyTri, nodeAABB))
+				{
+					if (numberOfNodesIntersected > 1)
+					{
+						straddle = true; //intersected more than 1 node
+						index = -1; //throw exception later if accessing
+						break;
+					}
+					++numberOfNodesIntersected;
+					index = i; //if not it will return the index of the child that contains the polygons directly
+				}
+			}
+		}
+
+		if (!straddle && pNode->pChildren[index]) //if doesnt straddle
 		{
 			// Does not straddle the child nodes
 			// Push the object into the cell that contains its center 
-			InsertIntoOctTree(pNode->pChildren[result.first], newObject);
+			InsertIntoOctTree(pNode->pChildren[index], objpolys);
 		}
 		else
 		{
-			// Node straddles the child cells, so store it at parent level 
-			// Insert into this node’s list of objects
+			// Node straddles the child cells, so store it at parent level  (I  read somewhere we shouldnt
+			// add to both child nodes)
+			// Insert into this node’s list of objects (polygon level not gameobj)
+			Model polygonData;
+			polygonData.loadBSPPolygons(objpolys);
+			pNode->geometry = polygonData;
 			//newObject->depth = pNode->depth; //assign depth used for rendering later
-			newObject->octTreeNode = pNode; //assign depth used for rendering later (diff child diff colour)
-			pNode->pObjects.push_back(newObject);
+			//newObject->octTreeNode = pNode; //assign depth used for rendering later (diff child diff colour)
+			//pNode->pObjects.push_back(newObject);
 		}
-
-		return result.first; // can serve as an error code
-	}
-
-	std::pair<int, bool> getChildIndex(TreeNode* pNode, GameObject* newObject)
-	{
-		bool bStraddle = false;
-		int index = 0, flag = 1;
-		for (size_t axis = 0; axis < 3; axis++) //For each direction axis, { X = 0, Y = 1, Z = 2 }
-		{
-			glm::vec3 centreOfObj = (newObject->aabbBV.m_Max + newObject->aabbBV.m_Min) * 0.5f;
-			float d = (centreOfObj[axis] - pNode->center[axis]);
-			// Check if d is within bounds of the BV
-			float objHalfExtents = (newObject->aabbBV.m_Max[axis] - newObject->aabbBV.m_Min[axis]) * 0.5f;
- 			if (abs(d) <= objHalfExtents)
-			{
-				bStraddle = true;
-				break;
-			}
-
-			// which of + or - value for the bit?
-			if (d > 0)
-				index |= (1 << axis);
-		}
-		return std::pair<int, bool> {index, bStraddle}; // can serve as an error code
+		return index;
 	}
 
 	// Classify point p to a plane thickened by a given thickness epsilon
@@ -112,7 +130,7 @@ namespace SpatialPartitioning
 		// Classify p based on the signed distance
 		if (dist > plane.m_d + PLANE_THICKNESS_EPSILON)
 			return POINT_ATTRIB::POINT_IN_FRONT_OF_PLANE;
-		if (dist < plane.m_d  - PLANE_THICKNESS_EPSILON)
+		if (dist < plane.m_d - PLANE_THICKNESS_EPSILON)
 			return POINT_ATTRIB::POINT_BEHIND_PLANE;
 		return POINT_ATTRIB::POINT_ON_PLANE;
 	}
@@ -128,12 +146,12 @@ namespace SpatialPartitioning
 		for (int i = 0; i < numVerts; i++) {
 			glm::vec3 p = poly.vertices[i];
 			switch (ClassifyPointToPlane(p, plane)) {
-				case POINT_ATTRIB::POINT_IN_FRONT_OF_PLANE:
-					numInFront++;
-					break;
-				case POINT_ATTRIB::POINT_BEHIND_PLANE:
-					numBehind++;
-					break;
+			case POINT_ATTRIB::POINT_IN_FRONT_OF_PLANE:
+				numInFront++;
+				break;
+			case POINT_ATTRIB::POINT_BEHIND_PLANE:
+				numBehind++;
+				break;
 			}
 		}
 		// If vertices on both sides of the plane, the polygon is straddling
@@ -182,17 +200,17 @@ namespace SpatialPartitioning
 				if (i == j) continue;
 				// Keep standing count of the various poly-plane relationships
 				switch (ClassifyPolygonToPlane(polygons[j], plane)) {
-					case POLYGON_ATTRIB::POLYGON_COPLANAR_WITH_PLANE:
-						/* Coplanar polygons treated as being in front of plane */
-					case POLYGON_ATTRIB::POLYGON_IN_FRONT_OF_PLANE:
-						numInFront++;
-						break;
-					case POLYGON_ATTRIB::POLYGON_BEHIND_PLANE:
-						numBehind++;
-						break;
-					case POLYGON_ATTRIB::POLYGON_STRADDLING_PLANE:
-						numStraddling++;
-						break;
+				case POLYGON_ATTRIB::POLYGON_COPLANAR_WITH_PLANE:
+					/* Coplanar polygons treated as being in front of plane */
+				case POLYGON_ATTRIB::POLYGON_IN_FRONT_OF_PLANE:
+					numInFront++;
+					break;
+				case POLYGON_ATTRIB::POLYGON_BEHIND_PLANE:
+					numBehind++;
+					break;
+				case POLYGON_ATTRIB::POLYGON_STRADDLING_PLANE:
+					numStraddling++;
+					break;
 				}
 			}
 			// Compute score as a weighted combination (based on K, with K in range
@@ -251,7 +269,7 @@ namespace SpatialPartitioning
 					glm::vec3 i;
 					float t; //not used
 					//Outputs intersectiion point i between edge and plane
-					IntersectSegmentPlane(a, b, plane, t, i); 
+					IntersectSegmentPlane(a, b, plane, t, i);
 					assert(ClassifyPointToPlane(i, plane) == POINT_ATTRIB::POINT_ON_PLANE);
 					frontVerts.push_back(i);
 					backVerts.push_back(i);
@@ -277,8 +295,8 @@ namespace SpatialPartitioning
 			aSide = bSide;
 		}
 		// Create (and return) two new polygons from the two vertex lists
-		Polygon frontP (frontVerts);
-		Polygon backP (backVerts);
+		Polygon frontP(frontVerts);
+		Polygon backP(backVerts);
 
 		frontPoly = frontP;
 		backPoly = backP;
@@ -295,7 +313,7 @@ namespace SpatialPartitioning
 
 			for (size_t i = 0; i < idx.size(); i += 3)
 			{
-				std::vector<glm::vec3> vertices{ v[idx[i]].Position , v[idx[i+1]].Position , v[idx[i+2]].Position };
+				std::vector<glm::vec3> vertices{ v[idx[i]].Position , v[idx[i + 1]].Position , v[idx[i + 2]].Position };
 				Polygon poly(vertices); //1 triangle 1 polygon
 				polygons.push_back(poly);
 			}
@@ -328,7 +346,7 @@ namespace SpatialPartitioning
 
 		// If criterion for a leaf is matched, create a leaf node from remaining polygons
 		if (polygons.size() <= minPolyCount) //|| ...etc...)
-		return new BSPNode(polygons);
+			return new BSPNode(polygons);
 		// Select best possible partitioning plane based on the input geometry
 		Collision::Plane splitPlane = PickSplittingPlane(polygons);
 		std::vector<Polygon> frontList, backList;
@@ -337,25 +355,25 @@ namespace SpatialPartitioning
 		for (int i = 0; i < polygons.size(); i++) {
 			Polygon poly = polygons[i], frontPart, backPart;
 			switch (ClassifyPolygonToPlane(poly, splitPlane)) {
-				case POLYGON_ATTRIB::POLYGON_COPLANAR_WITH_PLANE:
-					// What’s done in this case depends on what type of tree is being
-					// built. For a node-storing tree, the polygon is stored inside
-					// the node at this level (along with all other polygons coplanar
-					// with the plane). Here, for a leaf-storing tree, coplanar polygons
-					// are sent to either side of the plane. In this case, to the front
-					// side, by falling through to the next case
-				case POLYGON_ATTRIB::POLYGON_IN_FRONT_OF_PLANE:
-					frontList.push_back(poly);
-					break;
-				case POLYGON_ATTRIB::POLYGON_BEHIND_PLANE:
-					backList.push_back(poly);
-					break;
-				case POLYGON_ATTRIB::POLYGON_STRADDLING_PLANE:
-					// Split polygon to plane and send a part to each side of the plane
-					SplitPolygon(poly, splitPlane, frontPart, backPart);
-					frontList.push_back(frontPart);
-					backList.push_back(backPart);
-					break;
+			case POLYGON_ATTRIB::POLYGON_COPLANAR_WITH_PLANE:
+				// What’s done in this case depends on what type of tree is being
+				// built. For a node-storing tree, the polygon is stored inside
+				// the node at this level (along with all other polygons coplanar
+				// with the plane). Here, for a leaf-storing tree, coplanar polygons
+				// are sent to either side of the plane. In this case, to the front
+				// side, by falling through to the next case
+			case POLYGON_ATTRIB::POLYGON_IN_FRONT_OF_PLANE:
+				frontList.push_back(poly);
+				break;
+			case POLYGON_ATTRIB::POLYGON_BEHIND_PLANE:
+				backList.push_back(poly);
+				break;
+			case POLYGON_ATTRIB::POLYGON_STRADDLING_PLANE:
+				// Split polygon to plane and send a part to each side of the plane
+				SplitPolygon(poly, splitPlane, frontPart, backPart);
+				frontList.push_back(frontPart);
+				backList.push_back(backPart);
+				break;
 			}
 		}
 

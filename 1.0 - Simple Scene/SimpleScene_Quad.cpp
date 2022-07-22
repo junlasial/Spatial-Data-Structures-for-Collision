@@ -642,7 +642,7 @@ int SimpleScene_Quad::Render()
 		if (!BSPTreeEnabled)
 			models[gameObjs.GetModelID()].Draw();
 
-		if (renderBV && !BSPTreeEnabled)
+		if (renderBV && !BSPTreeEnabled && !OctTreeEnabled)
 		{
 			//Render the model of the Bounding Volume
 			if (gameObjs.colliderName == "AABB")
@@ -665,10 +665,10 @@ int SimpleScene_Quad::Render()
 				glm::vec3 colour = glm::vec3(0.f, 1.f, 0.f);
 				if (OctTreeEnabled && spatialPartitionTree)
 				{
-					colour = glm::vec3(1.f, 0.f, 0.f);
-					SpatialPartitioning::TreeNode* node = static_cast<SpatialPartitioning::TreeNode*>(gameObjs.octTreeNode);
-					if (node->depth > 0)
-						colour = node->colour;
+					colour = glm::vec3(0.f, 1.f, 0.f);
+					//SpatialPartitioning::TreeNode* node = static_cast<SpatialPartitioning::TreeNode*>(gameObjs.octTreeNode);
+					//if (node->depth > 0)
+					//	colour = node->colour;
 				}
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 				//Draw
@@ -752,12 +752,13 @@ int SimpleScene_Quad::Render()
 			float halfWidth = std::max(Max.x - Min.x, Max.y - Min.y);
 			halfWidth = std::max(Max.z - Min.z, halfWidth);
 			halfWidth *= 0.5f;
-			spatialPartitionTree = SpatialPartitioning::BuildOctTree(center, halfWidth, 3, 0, gameObjList);
+			spatialPartitionTree = SpatialPartitioning::BuildOctTree(center, halfWidth, 3, 0, totalObjPolygons);
 
 			//Insert all the game Objs into the list
 			for (auto& obj : gameObjList)
 			{
-				SpatialPartitioning::InsertIntoOctTree(spatialPartitionTree, &obj);
+				std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
+				SpatialPartitioning::InsertIntoOctTree(spatialPartitionTree, objPolys);
 			}
 
 		}
@@ -1124,8 +1125,8 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 	//Draw
-	models["Cube"].DrawBoundingVolume();
-
+	models["Cube"].DrawBoundingVolume(); //Render the OctTree nodes
+	
 	for (size_t i = 0; i < 8; i++)
 	{
 		RenderOctTree(node->pChildren[i], projection, view, ++col); //Recursive call for all the children
