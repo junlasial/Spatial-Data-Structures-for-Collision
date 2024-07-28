@@ -1,6 +1,4 @@
-//
-// Created by pushpak on 6/1/18.
-//
+
 
 #ifndef SIMPLE_SCENE_SIMPLESCENE_QUAD_H
 #define SIMPLE_SCENE_SIMPLESCENE_QUAD_H
@@ -26,7 +24,7 @@ class SimpleScene_Quad : public Scene
 public:
     SimpleScene_Quad() = default;
     SimpleScene_Quad( int windowWidth, int windowHeight );
-    ~SimpleScene_Quad()
+    ~SimpleScene_Quad();
   
 
 

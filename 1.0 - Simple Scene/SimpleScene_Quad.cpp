@@ -63,67 +63,62 @@ int SimpleScene_Quad::Init()
 	Model cube;
 	cube.loadModel("Common/models/cube.obj");
 	models.emplace("Cube", cube);
-	intModelID.emplace(1, "Cube");
+	intModelID.emplace(5, "Cube");
 
-	Model fourSphere;
-	fourSphere.loadModel("Common/models/1/part_a/g0.obj");
-	models.emplace("4Sphere", fourSphere);
-	intModelID.emplace(2, "4Sphere");
+	Model object1;
+	object1.loadModel("Common/models/1/part_a/g0.obj");
+	models.emplace("object1", object1);
+	intModelID.emplace(2, "object1");
 
-	Model fourSphere1;
-	fourSphere1.loadModel("Common/models/1/part_a/g1.obj");
-	models.emplace("4Sphere1", fourSphere1);
-	intModelID.emplace(3, "4Sphere1");
+	Model object2;
+	object2.loadModel("Common/models/1/part_a/g1.obj");
+	models.emplace("object2", object2);
+	intModelID.emplace(3, "object2");
 
-	Model fourSphere2;
-	fourSphere2.loadModel("Common/models/1/part_b/g0.obj");
-	models.emplace("4Sphere2", fourSphere2);
-	intModelID.emplace(4, "4Sphere2");
+	Model object3;
+	object3.loadModel("Common/models/1/part_b/g0.obj");
+	models.emplace("object3", object3);
+	intModelID.emplace(4, "object3");
 
-	Model fourSphere3;
-	fourSphere3.loadModel("Common/models/1/part_b/g1.obj");
-	models.emplace("4Sphere3", fourSphere3);
-	intModelID.emplace(5, "4Sphere3");
+	Model object4;
+	object4.loadModel("Common/models/1/part_b/g1.obj");
+	models.emplace("object4", object4);
+	intModelID.emplace(1, "object4");
 
+	Model object5;
+	object5.loadModel("Common/models/1/part_a/g2.obj");
+	models.emplace("object5", object5);
+	intModelID.emplace(5, "object5");
 
+	VisualEntity one;
+	one.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for object1
+	one.AssignModelIdentifier("object1");
+	gameObjList.push_back(one);
+	one.entityID = 1;
 
-	Model fourSphere4;
-	fourSphere4.loadModel("Common/models/1/part_a/g2.obj");
-	models.emplace("4Sphere4", fourSphere4);
-	intModelID.emplace(5, "4Sphere4");
+	VisualEntity two;
+	two.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for object2
+	two.AssignModelIdentifier("object2");
+	gameObjList.push_back(two);
+	two.entityID = 2;
 
+	VisualEntity three;
+	three.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for object3
+	three.AssignModelIdentifier("object3");
+	gameObjList.push_back(three);
+	three.entityID = 3;
 
+	VisualEntity four;
+	four.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for object4
+	four.AssignModelIdentifier("object4");
+	gameObjList.push_back(four);
+	four.entityID = 4;
 
-	VisualEntity second;
-	second.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere
-	second.AssignModelIdentifier("4Sphere");
-	gameObjList.push_back(second);
-	second.entityID = 1;
-
-	VisualEntity third;
-	third.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere1
-	third.AssignModelIdentifier("4Sphere1");
-	gameObjList.push_back(third);
-	third.entityID = 2;
-
-	VisualEntity fourth;
-	fourth.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere2
-	fourth.AssignModelIdentifier("4Sphere2");
-	gameObjList.push_back(fourth);
-	fourth.entityID = 3;
-
-	VisualEntity fifth;
-	fifth.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
-	fifth.AssignModelIdentifier("4Sphere3");
-	gameObjList.push_back(fifth);
-	fifth.entityID = 4;
-
-
-	VisualEntity sixth;
-	sixth.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
-	sixth.AssignModelIdentifier("4Sphere4");
-	gameObjList.push_back(sixth);
-	sixth.entityID = 5;
+	VisualEntity five;
+	five.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for object5
+	five.AssignModelIdentifier("object5");
+	gameObjList.push_back(five);
+	five.entityID = 5;
 
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders("Common/shaders/DiffuseShader.vert", "Common/shaders/DiffuseShader.frag");
@@ -152,8 +147,7 @@ int SimpleScene_Quad::Init()
 	
 
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
+
 int SimpleScene_Quad::Render()
 {
 

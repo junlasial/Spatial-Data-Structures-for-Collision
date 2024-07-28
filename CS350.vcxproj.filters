@@ -125,9 +125,6 @@
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_truetype.h">
       <Filter>IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="1.0 - Simple Scene\Light.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="1.0 - Simple Scene\BoundingVolume.h">
       <Filter>Header Files</Filter>
     </ClInclude>

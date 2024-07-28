@@ -180,7 +180,6 @@
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_textedit.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_truetype.h" />
     <ClInclude Include="1.0 - Simple Scene\VisualEntity.h" />
-    <ClInclude Include="1.0 - Simple Scene\Light.h" />
     <ClInclude Include="1.0 - Simple Scene\Mesh.h" />
     <ClInclude Include="1.0 - Simple Scene\Model.h" />
     <ClInclude Include="1.0 - Simple Scene\SimpleScene_Quad.h" />
