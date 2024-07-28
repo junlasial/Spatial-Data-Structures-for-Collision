@@ -1,10 +1,9 @@
-
-#include "SimpleScene_Quad.h"
-#include <shader.hpp>
 #include <glm/vec3.hpp>
 #include <glm/detail/type_mat4x4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "SimpleScene_Quad.h"
+#include <shader.hpp>
 #include "Transform.h"
 #include "BoundingVolume.h"
 #include <random>
@@ -19,23 +18,6 @@ void SimpleScene_Quad::SetupNanoGUI(GLFWwindow* pWindow)
 {
 	pWindow = nullptr;
 }
-
-bool compareX(GameObject* a, GameObject* b)
-{
-	return a->transform.Position.x < b->transform.Position.x;
-}
-
-bool compareY(GameObject* a, GameObject* b)
-{
-	return a->transform.Position.y < b->transform.Position.y;
-}
-
-bool compareZ(GameObject* a, GameObject* b)
-{
-	return a->transform.Position.z < b->transform.Position.z;
-}
-
-
 
 SimpleScene_Quad::~SimpleScene_Quad()
 {
@@ -112,36 +94,36 @@ int SimpleScene_Quad::Init()
 
 
 
-	GameObject second;
-	second.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere
-	second.SetModelID("4Sphere");
+	VisualEntity second;
+	second.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere
+	second.AssignModelIdentifier("4Sphere");
 	gameObjList.push_back(second);
-	second.m_id = 1;
+	second.entityID = 1;
 
-	GameObject third;
-	third.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere1
-	third.SetModelID("4Sphere1");
+	VisualEntity third;
+	third.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere1
+	third.AssignModelIdentifier("4Sphere1");
 	gameObjList.push_back(third);
-	third.m_id = 2;
+	third.entityID = 2;
 
-	GameObject fourth;
-	fourth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere2
-	fourth.SetModelID("4Sphere2");
+	VisualEntity fourth;
+	fourth.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere2
+	fourth.AssignModelIdentifier("4Sphere2");
 	gameObjList.push_back(fourth);
-	fourth.m_id = 3;
+	fourth.entityID = 3;
 
-	GameObject fifth;
-	fifth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
-	fifth.SetModelID("4Sphere3");
+	VisualEntity fifth;
+	fifth.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
+	fifth.AssignModelIdentifier("4Sphere3");
 	gameObjList.push_back(fifth);
-	fifth.m_id = 4;
+	fifth.entityID = 4;
 
 
-	GameObject sixth;
-	sixth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
-	sixth.SetModelID("4Sphere4");
+	VisualEntity sixth;
+	sixth.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
+	sixth.AssignModelIdentifier("4Sphere4");
 	gameObjList.push_back(sixth);
-	sixth.m_id = 5;
+	sixth.entityID = 5;
 
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders("Common/shaders/DiffuseShader.vert", "Common/shaders/DiffuseShader.frag");
@@ -160,7 +142,7 @@ int SimpleScene_Quad::Init()
 	// Get polygons for every game object, put in a single vector
 	for (auto& obj : gameObjList)
 	{
-		std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
+		std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
 		totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
 	}
 
@@ -189,19 +171,19 @@ int SimpleScene_Quad::Render()
 	//Update gameObject attribues (Transform, BV)
 	for (int i = 0; i < gameObjList.size(); ++i)
 	{
-		Transform firstTrans(gameObjList[i].GetTransform().Position, gameObjList[i].GetTransform().scale, gameObjList[i].GetTransform().scale2, gameObjList[i].GetTransform().rotation, gameObjList[i].GetTransform().rayDirection);
-		firstTrans.triangleVertices = gameObjList[i].GetTransform().triangleVertices;
-		gameObjList[i].SetTransform(firstTrans);
-		if (gameObjList[i].changedCollider)
+		Transform firstTrans(gameObjList[i].AccessTransform().Position, gameObjList[i].AccessTransform().scale, gameObjList[i].AccessTransform().scale2, gameObjList[i].AccessTransform().rotation, gameObjList[i].AccessTransform().rayDirection);
+		firstTrans.triangleVertices = gameObjList[i].AccessTransform().triangleVertices;
+		gameObjList[i].UpdateTransform(firstTrans);
+		if (gameObjList[i].colliderModified)
 		{
-			gameObjList[i].aabbBV = BoundingVolume::createAABB(models[gameObjList[i].GetModelID()].combinedVertices);
-			gameObjList[i].aabbBV.m_Min = gameObjList[i].transform.Position + gameObjList[i].aabbBV.m_Min;
-			gameObjList[i].aabbBV.m_Max = gameObjList[i].transform.Position + gameObjList[i].aabbBV.m_Max;
+			gameObjList[i].boundingVolume = BoundingVolume::createAABB(models[gameObjList[i].FetchModelIdentifier()].combinedVertices);
+			gameObjList[i].boundingVolume.m_Min = gameObjList[i].entityTransform.Position + gameObjList[i].boundingVolume.m_Min;
+			gameObjList[i].boundingVolume.m_Max = gameObjList[i].entityTransform.Position + gameObjList[i].boundingVolume.m_Max;
 
 		
 
 			BVHObjs[i] = &gameObjList[i];
-			gameObjList[i].changedCollider = false;
+			gameObjList[i].colliderModified = false;
 		}
 		BVHObjs[i] = &gameObjList[i];
 
@@ -218,10 +200,10 @@ int SimpleScene_Quad::Render()
 
 	for (auto& gameObjs : gameObjList)
 	{
-		Transform gameObjTrans = gameObjs.GetTransform();
+		Transform gameObjTrans = gameObjs.AccessTransform();
 
 		glm::mat4 objTrans;
-		if (gameObjs.GetModelID() == "Cube")
+		if (gameObjs.FetchModelIdentifier() == "Cube")
 			objTrans = projection * view * gameObjTrans.GetModelMtx3f();
 		else
 			objTrans = projection * view * gameObjTrans.GetModelMtx();
@@ -235,23 +217,23 @@ int SimpleScene_Quad::Render()
 		glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), false);
 		//Render the model of the gameObjs
 		if (!BSPTreeEnabled)
-			models[gameObjs.GetModelID()].Draw();
+			models[gameObjs.FetchModelIdentifier()].Draw();
 
 		if (renderBV && !BSPTreeEnabled && !OctTreeEnabled)
 		{
 			//Render the model of the Bounding Volume
-			if (gameObjs.colliderName == "AABB")
+			if (gameObjs.currentCollider == "AABB")
 			{
 				//AABB Update (for now only translation and scale)
 				//Set transform for the cube based on the AABB size
 				//half extents are the scale
-				float scaleX = (gameObjs.aabbBV.m_Max.x - gameObjs.aabbBV.m_Min.x) * 0.5f;
-				float scaleY = (gameObjs.aabbBV.m_Max.y - gameObjs.aabbBV.m_Min.y) * 0.5f;
-				float scaleZ = (gameObjs.aabbBV.m_Max.z - gameObjs.aabbBV.m_Min.z) * 0.5f;
+				float scaleX = (gameObjs.boundingVolume.m_Max.x - gameObjs.boundingVolume.m_Min.x) * 0.5f;
+				float scaleY = (gameObjs.boundingVolume.m_Max.y - gameObjs.boundingVolume.m_Min.y) * 0.5f;
+				float scaleZ = (gameObjs.boundingVolume.m_Max.z - gameObjs.boundingVolume.m_Min.z) * 0.5f;
 
 				glm::vec3 aabbScale{ scaleX, scaleY, scaleZ };
-				glm::vec3 aabbCentre = (gameObjs.aabbBV.m_Max + gameObjs.aabbBV.m_Min) / 2.f;
-				Transform aabbTrans(aabbCentre, gameObjs.GetTransform().scale, aabbScale, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });
+				glm::vec3 aabbCentre = (gameObjs.boundingVolume.m_Max + gameObjs.boundingVolume.m_Min) / 2.f;
+				Transform aabbTrans(aabbCentre, gameObjs.AccessTransform().scale, aabbScale, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });
 
 				objTrans = projection * view * aabbTrans.GetModelMtx3f();
 				GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
@@ -277,22 +259,22 @@ int SimpleScene_Quad::Render()
 	{
 		if (spatialPartitionTree == nullptr)
 		{
-			glm::vec3 Min = gameObjList[0].aabbBV.m_Min;
-			glm::vec3 Max = gameObjList[0].aabbBV.m_Max;
+			glm::vec3 Min = gameObjList[0].boundingVolume.m_Min;
+			glm::vec3 Max = gameObjList[0].boundingVolume.m_Max;
 			for (auto& obj : gameObjList)
 			{
-				if (Min.x > obj.aabbBV.m_Min.x)
-					Min.x = obj.aabbBV.m_Min.x;
-				if (Max.x < obj.aabbBV.m_Max.x)
-					Max.x = obj.aabbBV.m_Max.x;
-				if (Min.y > obj.aabbBV.m_Min.y)
-					Min.y = obj.aabbBV.m_Min.y;
-				if (Max.y < obj.aabbBV.m_Max.y)
-					Max.y = obj.aabbBV.m_Max.y;
-				if (Min.z > obj.aabbBV.m_Min.z)
-					Min.z = obj.aabbBV.m_Min.z;
-				if (Max.z < obj.aabbBV.m_Max.z)
-					Max.z = obj.aabbBV.m_Max.z;
+				if (Min.x > obj.boundingVolume.m_Min.x)
+					Min.x = obj.boundingVolume.m_Min.x;
+				if (Max.x < obj.boundingVolume.m_Max.x)
+					Max.x = obj.boundingVolume.m_Max.x;
+				if (Min.y > obj.boundingVolume.m_Min.y)
+					Min.y = obj.boundingVolume.m_Min.y;
+				if (Max.y < obj.boundingVolume.m_Max.y)
+					Max.y = obj.boundingVolume.m_Max.y;
+				if (Min.z > obj.boundingVolume.m_Min.z)
+					Min.z = obj.boundingVolume.m_Min.z;
+				if (Max.z < obj.boundingVolume.m_Max.z)
+					Max.z = obj.boundingVolume.m_Max.z;
 			}
 			glm::vec3 center = (Min + Max) / 2.f;
 			float halfWidth = std::max(Max.x - Min.x, Max.y - Min.y);
@@ -303,7 +285,7 @@ int SimpleScene_Quad::Render()
 			//Insert all the game Objs into the list
 			for (auto& obj : gameObjList)
 			{
-				std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
+				std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
 				SpatialPartitioning::InsertIntoOctTree(spatialPartitionTree, objPolys);
 			}
 
@@ -347,7 +329,7 @@ int SimpleScene_Quad::Render()
 				{
 					for (auto& obj : gameObjList) //Render gameObj controls
 					{
-						obj.changedCollider = true;
+						obj.colliderModified = true;
 					}
 				}
 
@@ -358,7 +340,7 @@ int SimpleScene_Quad::Render()
 				{
 					ImGui::Text("Object %d", i + 1);
 					ImGui::PushID(i);
-					gameObjList[i].DrawImGuiControls();
+					gameObjList[i].RenderImGuiControls();
 					ImGui::PopID();
 				}
 
@@ -449,7 +431,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 	Transform temp(octTreeNodeCentre, 1.f, { node->halfwidth, node->halfwidth, node->halfwidth }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });
 	aabbTrans = temp;
 
-	//gameObjs.SetTransform(aabbTrans);
+	//gameObjs.UpdateTransform(aabbTrans);
 	glm::mat4 objTrans;
 	objTrans = projection * view * aabbTrans.GetModelMtx3f();
 	GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");

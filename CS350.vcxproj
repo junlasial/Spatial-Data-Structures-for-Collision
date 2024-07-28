@@ -157,7 +157,7 @@
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\imgui_draw.cpp" />
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\imgui_tables.cpp" />
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\GameObject.cpp" />
+    <ClCompile Include="1.0 - Simple Scene\VisualEntity.cpp" />
     <ClCompile Include="1.0 - Simple Scene\GLApplication.cpp" />
     <ClCompile Include="1.0 - Simple Scene\Mesh.cpp" />
     <ClCompile Include="1.0 - Simple Scene\Model.cpp" />
@@ -179,7 +179,7 @@
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_rectpack.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_textedit.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_truetype.h" />
-    <ClInclude Include="1.0 - Simple Scene\GameObject.h" />
+    <ClInclude Include="1.0 - Simple Scene\VisualEntity.h" />
     <ClInclude Include="1.0 - Simple Scene\Light.h" />
     <ClInclude Include="1.0 - Simple Scene\Mesh.h" />
     <ClInclude Include="1.0 - Simple Scene\Model.h" />

@@ -10,7 +10,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <vector>
-#include "GameObject.h"
+#include "VisualEntity.h"
 #include "Model.h"
 #include "Camera.h"
 
@@ -26,7 +26,8 @@ class SimpleScene_Quad : public Scene
 public:
     SimpleScene_Quad() = default;
     SimpleScene_Quad( int windowWidth, int windowHeight );
-    virtual ~SimpleScene_Quad();
+    ~SimpleScene_Quad()
+  
 
 
 public:
@@ -58,17 +59,17 @@ private:
     Camera miniMapCam{};
     std::map<const char*, Model> models; //contain all the models and their ids (indices)
     std::map<int, const char*> intModelID; //contain all the models and their ids (indices) in int format
-    std::vector<GameObject> gameObjList;
+    std::vector<VisualEntity> gameObjList;
     std::map<const char*, Collision::Collider*> boundingVolume;
 
-    std::vector<GameObject*> BVHObjs{ 8 };
-    //GameObject* BVHObjs[7];
+    std::vector<VisualEntity*> BVHObjs{ 5 };
+    //VisualEntity* BVHObjs[7];
     bool BVHenabled;
     bool newTree = true;
    
     bool renderBV = true;
     int renderDepth = 0; 
-    bool bottomUpTree = false;
+
 
     bool OctTreeEnabled = false;
     bool renderOctTree = true;
@@ -85,13 +86,7 @@ private:
 };
 
 
-//Externs for BVH
-extern bool renderBVHSphere;
-extern int indexOfTreeInt;
 
-extern float nearestNeighbourWeight;
-extern float combinedVolWeight;
-extern float relVolIncreaseWeight;
 
 extern int minPolyCount;
 #endif //SIMPLE_SCENE_SIMPLESCENE_QUAD_H

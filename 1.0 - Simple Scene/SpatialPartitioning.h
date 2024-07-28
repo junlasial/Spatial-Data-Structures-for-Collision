@@ -1,5 +1,5 @@
 #pragma once
-#include "GameObject.h"
+#include "VisualEntity.h"
 #include "Collision.h"
 
 namespace SpatialPartitioning
@@ -13,7 +13,7 @@ namespace SpatialPartitioning
 	};
 
 	std::vector<Polygon> getPolygonsFromModel(const Model& model);
-	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, GameObject& obj);
+	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, VisualEntity& obj);
 
 	struct TreeNode
 	{
@@ -21,7 +21,7 @@ namespace SpatialPartitioning
 		float halfwidth;
 		TreeNode* pChildren[8];
 		Model geometry; //store geometry data
-		//std::vector<GameObject*> pObjects{};
+		//std::vector<VisualEntity*> pObjects{};
 		unsigned int depth;
 		TreeNode(glm::vec3 center, float halfWidth, TreeNode* childrenArray) :
 			center{ center }, halfwidth{ halfWidth }, pChildren{ childrenArray } {}

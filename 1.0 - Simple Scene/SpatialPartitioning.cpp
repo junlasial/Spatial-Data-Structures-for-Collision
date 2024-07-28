@@ -323,7 +323,7 @@ namespace SpatialPartitioning
 		return polygons;
 	}
 
-	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, GameObject& obj)
+	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, VisualEntity& obj)
 	{
 		std::vector<Polygon> polygons;
 		for (auto& modelPoly : modelPolys)
@@ -331,7 +331,7 @@ namespace SpatialPartitioning
 			Polygon poly(modelPoly);
 			for (auto& x : poly.vertices)
 			{
-				x += obj.transform.Position; //account for offset of game OBJECT position in world space (assumes no scaling, rotation)
+				x += obj.entityTransform.Position; //account for offset of game OBJECT position in world space (assumes no scaling, rotation)
 			}
 			polygons.push_back(poly);
 		}

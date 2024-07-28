@@ -3,7 +3,7 @@
 #include <utility>
 #include <vector>
 #include "Collision.h"
-#include "GameObject.h"
+#include "VisualEntity.h"
 #include <array>
 
 namespace BoundingVolume
