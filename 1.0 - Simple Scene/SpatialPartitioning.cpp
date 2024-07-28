@@ -67,7 +67,7 @@ namespace SpatialPartitioning
 
 		// Calculate which child cell the center of newObject is in
 		// Check if newObject straddles multiple child nodes
-		if (objpolys.size() > minPolyCount) //Terminating criteria, split into smaller inserts
+		if (objpolys.size() > minimumP_count) //Terminating criteria, split into smaller inserts
 		{
 			size_t halfSize = objpolys.size() / 2;
 			std::vector<poly_shape> objpolys1 (objpolys.begin(), objpolys.begin() + halfSize);
@@ -345,7 +345,7 @@ namespace SpatialPartitioning
 		// Get number of polygons in the input vector
 
 		// If criterion for a leaf is matched, create a leaf node from remaining polygons
-		if (polygons.size() <= minPolyCount) //|| ...etc...)
+		if (polygons.size() <= minimumP_count) //|| ...etc...)
 			return new BSPNode(polygons);
 		// Select best possible partitioning plane based on the input data_g
 		Collision::Plane splitPlane = Splitting_plane(polygons);

@@ -1,5 +1,5 @@
-#ifndef SIMPLE_SCENE_SIMPLESCENE_QUAD_H
-#define SIMPLE_SCENE_SIMPLESCENE_QUAD_H
+#ifndef SIMPLE_SCENE_Model_Scene_H
+#define SIMPLE_SCENE_Model_Scene_H
 
 #include "../Common/Scene.h"
 #include <glm/glm.hpp>
@@ -13,12 +13,12 @@
 #include "SpatialPartitioning.h"
 //#include "Collision.h"
 
-class SimpleScene_Quad : public Scene
+class Model_Scene : public Scene
 {
 public:
-    SimpleScene_Quad() = default;
-    SimpleScene_Quad(int windowWidth, int windowHeight);
-    ~SimpleScene_Quad();
+    Model_Scene() = default;
+    Model_Scene(int windowWidth, int windowHeight);
+    ~Model_Scene();
 
     int Init() override;
     void CleanUp() override;
@@ -66,6 +66,6 @@ private:
     bool renderBSPTree = true;
 };
 
-extern int minPolyCount;
+extern int minimumP_count;
 
-#endif //SIMPLE_SCENE_SIMPLESCENE_QUAD_H
+#endif //SIMPLE_SCENE_Model_Scene_H

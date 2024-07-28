@@ -11,35 +11,35 @@
 
 
 
-int minPolyCount = 30;
+int minimumP_count = 30;
 float model_scale = 1.0f;
 
-void SimpleScene_Quad::SetupNanoGUI(GLFWwindow* pWindow)
+void Model_Scene::SetupNanoGUI(GLFWwindow* pWindow)
 {
 	pWindow = nullptr;
 }
 
-SimpleScene_Quad::~SimpleScene_Quad()
+Model_Scene::~Model_Scene()
 {
 	initMembers();
 }
 
 
-SimpleScene_Quad::SimpleScene_Quad(int windowWidth, int windowHeight) : Scene(windowWidth, windowHeight),
+Model_Scene::Model_Scene(int windowWidth, int windowHeight) : Scene(windowWidth, windowHeight),
 programID(0), angleOfRotation(0.0f)
 {
 	initMembers();
 }
 
 
-void SimpleScene_Quad::initMembers()
+void Model_Scene::initMembers()
 {
 	programID = 0;
 	angleOfRotation = 0.0f;
 }
 
 
-void SimpleScene_Quad::CleanUp()
+void Model_Scene::CleanUp()
 {
 	// Cleanup VBO
 	for (auto model : models)
@@ -57,7 +57,7 @@ void SimpleScene_Quad::CleanUp()
 }
 
 
-int SimpleScene_Quad::Init()
+int Model_Scene::Init()
 {
 	// Load models
 	Model cube;
@@ -148,7 +148,7 @@ int SimpleScene_Quad::Init()
 
 
 
-int SimpleScene_Quad::Render()
+int Model_Scene::Render()
 {
 
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -387,7 +387,7 @@ int SimpleScene_Quad::Render()
 
 				ImGui::Text("Minimum poly_shape Count");
 				ImGui::SameLine();
-				ImGui::DragInt("##MinPolyCount", &minPolyCount, 1, 30, 300);
+				ImGui::DragInt("##minimumP_count", &minimumP_count, 1, 30, 300);
 
 				ImGui::EndTabItem();
 			}
@@ -410,7 +410,7 @@ int SimpleScene_Quad::Render()
 
 
 
-void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col)
+void Model_Scene::RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col)
 {
 	SpatialPartitioning::TreeNode* node = tree;
 	if (node == nullptr)
@@ -451,7 +451,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 	}
 }
 
-void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view)
+void Model_Scene::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view)
 {
 	SpatialPartitioning::BSPNode* node = tree;
 	if (node == nullptr)
@@ -486,7 +486,7 @@ void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const g
 
 }
 
-void SimpleScene_Quad::FreeOctTree(SpatialPartitioning::TreeNode* node)
+void Model_Scene::FreeOctTree(SpatialPartitioning::TreeNode* node)
 {
 	if (node == nullptr)
 		return;
@@ -497,7 +497,7 @@ void SimpleScene_Quad::FreeOctTree(SpatialPartitioning::TreeNode* node)
 	delete node;
 }
 
-void SimpleScene_Quad::FreeBSPTree(SpatialPartitioning::BSPNode* node)
+void Model_Scene::FreeBSPTree(SpatialPartitioning::BSPNode* node)
 {
 	if (node == nullptr)
 		return;

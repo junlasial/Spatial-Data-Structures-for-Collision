@@ -40,7 +40,7 @@ bool savePPMImageFile(const std::string& filepath, const std::vector<GLfloat>& p
 // Global variables
 GLFWwindow* window = nullptr;
 Scene* scene = nullptr;
-SimpleScene_Quad* sceneQuad = nullptr;
+Model_Scene* sceneQuad = nullptr;
 int windowWidth = 1280;
 int windowHeight = 960;
 float lastX = windowWidth / 2.0f;
@@ -103,8 +103,8 @@ int main()
     ImGui_ImplOpenGL3_Init();
 
     // Initialize the scene
-    scene = new SimpleScene_Quad(windowWidth, windowHeight);
-    sceneQuad = dynamic_cast<SimpleScene_Quad*>(scene);
+    scene = new Model_Scene(windowWidth, windowHeight);
+    sceneQuad = dynamic_cast<Model_Scene*>(scene);
     scene->Init();
 
     while (!glfwWindowShouldClose(window)) {
