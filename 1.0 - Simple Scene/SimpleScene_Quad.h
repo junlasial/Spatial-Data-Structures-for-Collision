@@ -33,10 +33,10 @@ public:
     int Init() override;
     void CleanUp() override;
 
-    void CollisionCheck(GameObject& first, GameObject& second);
-    int preRender() override;
+   
+   
     int Render() override;
-    int postRender() override;
+   
     inline GLuint GetProgramID() { return programID; }
     inline Camera* GetCamera() { return &camera; }
     void RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col);

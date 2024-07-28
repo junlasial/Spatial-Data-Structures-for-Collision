@@ -1,6 +1,4 @@
-//
-// Created by pushpak on 6/1/18.
-//
+
 #include "SimpleScene_Quad.h"
 #include <shader.hpp>
 #include <glm/vec3.hpp>
@@ -8,7 +6,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "Transform.h"
-#include "Collision.h"
 #include "BoundingVolume.h"
 #include <random>
 
@@ -16,10 +13,8 @@
 
 
 int minPolyCount = 30;
-
 float model_scale = 1.0f;
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
+
 void SimpleScene_Quad::SetupNanoGUI(GLFWwindow* pWindow)
 {
 	pWindow = nullptr;
@@ -41,34 +36,27 @@ bool compareZ(GameObject* a, GameObject* b)
 }
 
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
+
 SimpleScene_Quad::~SimpleScene_Quad()
 {
 	initMembers();
 }
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
+
 SimpleScene_Quad::SimpleScene_Quad(int windowWidth, int windowHeight) : Scene(windowWidth, windowHeight),
 programID(0), angleOfRotation(0.0f)
 {
 	initMembers();
 }
 
-//#pragma clang diagnostic push
-//#pragma ide diagnostic ignored "bugprone-unused-return-value"
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
+
 void SimpleScene_Quad::initMembers()
 {
 	programID = 0;
 	angleOfRotation = 0.0f;
 }
-//#pragma clang diagnostic pop
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
+
 void SimpleScene_Quad::CleanUp()
 {
 	// Cleanup VBO
@@ -86,8 +74,7 @@ void SimpleScene_Quad::CleanUp()
 	}
 }
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
+
 int SimpleScene_Quad::Init()
 {
 	// Load models
@@ -180,26 +167,21 @@ int SimpleScene_Quad::Init()
 	return Scene::Init();
 }
 
-void SimpleScene_Quad::CollisionCheck(GameObject& first, GameObject& second)
-{
+	
 
-
-}
-
-int SimpleScene_Quad::preRender()
-{
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
-
-	glCullFace(GL_BACK);
-	return 0;
-}
 
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 int SimpleScene_Quad::Render()
 {
+
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+
+	glCullFace(GL_BACK);
+
+
 	glUseProgram(programID);
 
 	glEnableVertexAttribArray(0);
@@ -216,7 +198,7 @@ int SimpleScene_Quad::Render()
 			gameObjList[i].aabbBV.m_Min = gameObjList[i].transform.Position + gameObjList[i].aabbBV.m_Min;
 			gameObjList[i].aabbBV.m_Max = gameObjList[i].transform.Position + gameObjList[i].aabbBV.m_Max;
 
-			gameObjList[i].sphereBV.m_Position = gameObjList[i].transform.Position + gameObjList[i].sphereBV.m_Position; //offset sphere position with gameobj position
+		
 
 			BVHObjs[i] = &gameObjList[i];
 			gameObjList[i].changedCollider = false;
@@ -279,34 +261,13 @@ int SimpleScene_Quad::Render()
 				if (OctTreeEnabled && spatialPartitionTree)
 				{
 					colour = glm::vec3(0.f, 1.f, 0.f);
-					//SpatialPartitioning::TreeNode* node = static_cast<SpatialPartitioning::TreeNode*>(gameObjs.octTreeNode);
-					//if (node->depth > 0)
-					//	colour = node->colour;
+		
 				}
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 				//Draw
 				models["Cube"].DrawBoundingVolume();
 			}
-			else if (gameObjs.colliderName == "Ritter's Sphere" || gameObjs.colliderName == "PCA Sphere"
-				|| gameObjs.colliderName == "Larsson's EPOS8" || gameObjs.colliderName == "Larsson's EPOS12" || gameObjs.colliderName == "Larsson's EPOS24") //spheres
-			{
-				float sphereScale{ gameObjs.sphereBV.m_Radius };
-				Transform sphereTrans(gameObjs.sphereBV.m_Position, sphereScale, { sphereScale, sphereScale, sphereScale }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });
-
-				objTrans = projection * view * sphereTrans.GetModelMtx();
-				GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
-				glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
-				glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
-				glm::vec3 colour = glm::vec3(0.f, 1.f, 0.f);
-				if (OctTreeEnabled && spatialPartitionTree)
-				{
-					colour = glm::vec3(1.f, 0.f, 0.f); //Red
-				}
-
-				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
-				//Draw
-				models["Sphere"].DrawBoundingVolume();
-			}
+			
 		}
 		glDisableVertexAttribArray(0);
 	}
@@ -469,14 +430,7 @@ int SimpleScene_Quad::Render()
 	return 0;
 }
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-int SimpleScene_Quad::postRender()
-{
-	//angleOfRotation += 0.001f;
 
-	return 0;
-}
 
 
 
@@ -488,7 +442,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 	if (node->depth < octTreeRenderDepth)
 		return; //dont render the deeper nodes
-	Transform aabbTrans, sphereTrans;
+	Transform aabbTrans;
 
 
 	glm::vec3 octTreeNodeCentre = node->center;
@@ -546,10 +500,7 @@ void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const g
 		glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
 
 		glm::vec3 colour{ 0.f, 1.f, 0.f };
-		//std::random_device rd;
-		//std::default_random_engine eng(rd());
-		//std::uniform_real_distribution<float> distr(0.f, 1.f);
-		//colour = glm::vec3(distr(eng), distr(eng), distr(eng));
+
 		colour = node->colour;
 		glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 		node->geometry.GenericDrawTriangle();
@@ -557,8 +508,6 @@ void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const g
 
 	
 
-	//RenderBSPTree(node->frontTree, projection, view);
-	//RenderBSPTree(node->backTree, projection, view);
 }
 
 void SimpleScene_Quad::FreeOctTree(SpatialPartitioning::TreeNode* node)

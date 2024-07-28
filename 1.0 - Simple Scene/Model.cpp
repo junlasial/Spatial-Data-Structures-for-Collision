@@ -46,7 +46,7 @@ void Model::loadModel(std::string const& path)
     // check for errors
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
     {
-        cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+        cout << "ERROR in assimp " << importer.GetErrorString() << endl;
         return;
     }
     // retrieve the directory path of the filepath

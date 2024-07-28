@@ -35,14 +35,9 @@ public:
     // Display : encapsulates per-frame behavior of the scene
     virtual int Display();
 
-    // preRender : called to setup stuff prior to rendering the frame
-    virtual int preRender();
 
     // Render : per frame rendering of the scene
     virtual int Render();
-
-    // postRender : Any updates to calculate after current frame
-    virtual int postRender();
 
     // cleanup before destruction
     virtual void CleanUp();

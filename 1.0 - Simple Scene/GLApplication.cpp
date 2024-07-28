@@ -74,13 +74,13 @@ int main()
 	//glfwSwapInterval(1);
 	// Open a window and create its OpenGL context
 	window = glfwCreateWindow(windowWidth, windowHeight, // window dimensions
-		"Sample 1 - Simple scene (Quad) with Scene Class", // window title
+		"Assingment 3 Jun", // window title
 		nullptr, // which monitor (if full-screen mode)
 		nullptr); // if sharing context with another window
 	if (window == nullptr)
 	{
 		fprintf(stderr,
-			"Failed to open GLFW window. If you have an Intel GPU, they are not 4.0 compatible.\n");
+			"Failed to open GLFW window. If you have an Intel GPU, they are not 3.0 compatible.\n");
 		getchar();
 		glfwTerminate();
 		return -1;

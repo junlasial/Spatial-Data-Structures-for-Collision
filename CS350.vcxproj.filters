@@ -66,13 +66,13 @@
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\imgui_widgets.cpp">
       <Filter>IMGUI</Filter>
     </ClCompile>
-    <ClCompile Include="1.0 - Simple Scene\Collision.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="1.0 - Simple Scene\BoundingVolume.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="1.0 - Simple Scene\SpatialPartitioning.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="1.0 - Simple Scene\Collision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -125,9 +125,6 @@
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_truetype.h">
       <Filter>IMGUI</Filter>
     </ClInclude>
-    <ClInclude Include="1.0 - Simple Scene\Collision.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="1.0 - Simple Scene\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -135,6 +132,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="1.0 - Simple Scene\SpatialPartitioning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="1.0 - Simple Scene\Collision.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

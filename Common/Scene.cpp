@@ -35,11 +35,6 @@ void Scene::LoadAllShaders()
 }
 
 
-// preRender : called to setup stuff prior to rendering the frame
-int Scene::preRender()
-{
-    return -1;
-}
 
 // Render : per frame rendering of the scene
 int Scene::Render()
@@ -47,11 +42,7 @@ int Scene::Render()
     return -1;
 }
 
-// postRender : Any updates to calculate after current frame
-int Scene::postRender()
-{
-    return -1;
-}
+
 
 // CleanUp : clean up resources before destruction
 void Scene::CleanUp()
@@ -62,11 +53,10 @@ void Scene::CleanUp()
 // Display : Per-frame execution of the scene
 int Scene::Display()
 {
-    preRender();
 
     Render();
 
-    postRender();
+
 
     return -1;
 }
