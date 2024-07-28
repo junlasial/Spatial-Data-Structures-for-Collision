@@ -8,14 +8,14 @@
 
 namespace SpatialPartitioning
 {
-	TreeNode* SpatialPartitioning::BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<Polygon>& polys)
+	TreeNode* SpatialPartitioning::BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<poly_shape>& polys)
 	{
 		// Base case
 		if (level < 0) //max depth
 			return nullptr;
 
-		// 1. Create new node Node( center, halfwidth )
-		// 2. Assign pChildren = nullptr, pObjects = nullptr
+		// 1. Create new node Node( center, mid_width )
+		// 2. Assign childp = nullptr, pObjects = nullptr
 		TreeNode* pNode = new TreeNode(center, halfWidth, nullptr);
 		pNode->depth = level;
 		pNode->col = col; //render diff children diff col
@@ -47,18 +47,18 @@ namespace SpatialPartitioning
 		glm::vec3 childrenColours = glm::vec3(distr(eng), distr(eng), distr(eng)); //same depth
 		for (size_t i = 0; i < 8; i++)
 		{
-			// 3. Calculate new center and halfwidth
+			// 3. Calculate new center and mid_width
 			offset.x = ((i & 1) ? step : -step);
 			offset.y = ((i & 2) ? step : -step);
 			offset.z = ((i & 4) ? step : -step);
-			pNode->pChildren[i] = BuildOctTree(center + offset, step, level - 1, ++col, polys);
-			if (pNode->pChildren[i])
-				pNode->pChildren[i]->colour = childrenColours;
+			pNode->childp[i] = BuildOctTree(center + offset, step, level - 1, ++col, polys);
+			if (pNode->childp[i])
+				pNode->childp[i]->colour = childrenColours;
 		}
 		return pNode;
 	}
 
-	int InsertIntoOctTree(TreeNode* pNode, const std::vector<Polygon>& objpolys)
+	int InsertIntoOctTree(TreeNode* pNode, const std::vector<poly_shape>& objpolys)
 	{
 		int index = 0, straddle = 0;
 		int numberOfNodesIntersected = 0;
@@ -70,8 +70,8 @@ namespace SpatialPartitioning
 		if (objpolys.size() > minPolyCount) //Terminating criteria, split into smaller inserts
 		{
 			size_t halfSize = objpolys.size() / 2;
-			std::vector<Polygon> objpolys1 (objpolys.begin(), objpolys.begin() + halfSize);
-			std::vector<Polygon> objpolys2 (objpolys.begin() + halfSize, objpolys.end());
+			std::vector<poly_shape> objpolys1 (objpolys.begin(), objpolys.begin() + halfSize);
+			std::vector<poly_shape> objpolys2 (objpolys.begin() + halfSize, objpolys.end());
 			InsertIntoOctTree(pNode, objpolys1);
 			InsertIntoOctTree(pNode, objpolys2);
 		}
@@ -79,12 +79,12 @@ namespace SpatialPartitioning
 		for (size_t i = 0; i < 8; i++)
 		{
 			if (straddle) break;
-			if (pNode->pChildren[i] == nullptr) break;
+			if (pNode->childp[i] == nullptr) break;
 			for (auto& poly : objpolys) //check if all the polygons are intersecting the child node
 			{
 				Collision::Triangle polyTri(poly.vertices[0], poly.vertices[1], poly.vertices[2]);
 
-				Collision::AABB nodeAABB(pNode->pChildren[i]->center + pNode->pChildren[i]->halfwidth * glm::vec3(-1.f, -1.f, -1.f), pNode->pChildren[i]->center + pNode->pChildren[i]->halfwidth * glm::vec3(1.f, 1.f, 1.f));
+				Collision::AABB nodeAABB(pNode->childp[i]->center + pNode->childp[i]->mid_width * glm::vec3(-1.f, -1.f, -1.f), pNode->childp[i]->center + pNode->childp[i]->mid_width * glm::vec3(1.f, 1.f, 1.f));
 
 				if (Collision::TriangleAABB(polyTri, nodeAABB))
 				{
@@ -100,11 +100,11 @@ namespace SpatialPartitioning
 			}
 		}
 
-		if (!straddle && pNode->pChildren[index]) //if doesnt straddle
+		if (!straddle && pNode->childp[index]) //if doesnt straddle
 		{
 			// Does not straddle the child nodes
 			// Push the object into the cell that contains its center 
-			InsertIntoOctTree(pNode->pChildren[index], objpolys);
+			InsertIntoOctTree(pNode->childp[index], objpolys);
 		}
 		else
 		{
@@ -113,7 +113,7 @@ namespace SpatialPartitioning
 			// Insert into this node’s list of objects (polygon level not gameobj)
 			Model polygonData;
 			polygonData.loadBSPPolygons(objpolys);
-			pNode->geometry = polygonData;
+			pNode->data_g = polygonData;
 			//newObject->depth = pNode->depth; //assign depth used for rendering later
 			//newObject->octTreeNode = pNode; //assign depth used for rendering later (diff child diff colour)
 			//pNode->pObjects.push_back(newObject);
@@ -122,22 +122,22 @@ namespace SpatialPartitioning
 	}
 
 	// Classify point p to a plane thickened by a given thickness epsilon
-	POINT_ATTRIB ClassifyPointToPlane(glm::vec3 p, Collision::Plane plane)
+	point_place ClassifyPointToPlane(glm::vec3 p, Collision::Plane plane)
 	{
 		constexpr float PLANE_THICKNESS_EPSILON = 0.1f;
 		// Compute signed distance of point from plane
 		float dist = glm::dot(plane.m_Normal, p);
 		// Classify p based on the signed distance
 		if (dist > plane.m_d + PLANE_THICKNESS_EPSILON)
-			return POINT_ATTRIB::POINT_IN_FRONT_OF_PLANE;
+			return point_place::point_front;
 		if (dist < plane.m_d - PLANE_THICKNESS_EPSILON)
-			return POINT_ATTRIB::POINT_BEHIND_PLANE;
-		return POINT_ATTRIB::POINT_ON_PLANE;
+			return point_place::point_back;
+		return point_place::point_plane;
 	}
 
 	// Return value specifying whether the polygon ‘poly’ lies in front of,
 	// behind of, on, or straddles the plane ‘plane’
-	POLYGON_ATTRIB ClassifyPolygonToPlane(Polygon poly, Collision::Plane plane)
+	poly_place CheckPolytoPlane(poly_shape poly, Collision::Plane plane)
 	{
 		// Loop over all polygon vertices and count how many vertices
 		// lie in front of and how many lie behind of the thickened plane
@@ -146,30 +146,30 @@ namespace SpatialPartitioning
 		for (int i = 0; i < numVerts; i++) {
 			glm::vec3 p = poly.vertices[i];
 			switch (ClassifyPointToPlane(p, plane)) {
-			case POINT_ATTRIB::POINT_IN_FRONT_OF_PLANE:
+			case point_place::point_front:
 				numInFront++;
 				break;
-			case POINT_ATTRIB::POINT_BEHIND_PLANE:
+			case point_place::point_back:
 				numBehind++;
 				break;
 			}
 		}
 		// If vertices on both sides of the plane, the polygon is straddling
 		if (numBehind != 0 && numInFront != 0)
-			return POLYGON_ATTRIB::POLYGON_STRADDLING_PLANE;
+			return poly_place::onplane;
 		// If one or more vertices in front of the plane and no vertices behind
 		// the plane, the polygon lies in front of the plane
 		if (numInFront != 0)
-			return POLYGON_ATTRIB::POLYGON_IN_FRONT_OF_PLANE;
+			return poly_place::planefront;
 		// Ditto, the polygon lies behind the plane if no vertices in front of
 		// the plane, and one or more vertices behind the plane
 		if (numBehind != 0)
-			return POLYGON_ATTRIB::POLYGON_BEHIND_PLANE;
+			return poly_place::planeback;
 		// All vertices lie on the plane so the polygon is coplanar with the plane
-		return POLYGON_ATTRIB::POLYGON_COPLANAR_WITH_PLANE;
+		return poly_place::coplane;
 	}
 
-	Collision::Plane GetPlaneFromPolygon(Polygon poly)
+	Collision::Plane polygon_GetPlane(poly_shape poly)
 	{
 		//Assuming that all points in poly lie on a single plane
 		glm::vec3 dir1 = poly.vertices[0] - poly.vertices[1];
@@ -180,7 +180,7 @@ namespace SpatialPartitioning
 	}
 
 	// Given a vector of polygons, attempts to compute a good splitting plane
-	Collision::Plane PickSplittingPlane(const std::vector<Polygon>& polygons)
+	Collision::Plane Splitting_plane(const std::vector<poly_shape>& polygons)
 	{
 		// Blend factor for optimizing for balance or splits (should be tweaked)
 		const float K = 0.8f;
@@ -193,22 +193,22 @@ namespace SpatialPartitioning
 		for (int i = 0; i < polygons.size(); i += increment) {
 			int numInFront = 0, numBehind = 0, numStraddling = 0;
 			//if (i == 10)
-			Collision::Plane plane = GetPlaneFromPolygon(polygons[i]);
+			Collision::Plane plane = polygon_GetPlane(polygons[i]);
 			// Test against all other polygons
 			for (int j = 0; j < polygons.size(); j++) {
 				// Ignore testing against self
 				if (i == j) continue;
 				// Keep standing count of the various poly-plane relationships
-				switch (ClassifyPolygonToPlane(polygons[j], plane)) {
-				case POLYGON_ATTRIB::POLYGON_COPLANAR_WITH_PLANE:
+				switch (CheckPolytoPlane(polygons[j], plane)) {
+				case poly_place::coplane:
 					/* Coplanar polygons treated as being in front of plane */
-				case POLYGON_ATTRIB::POLYGON_IN_FRONT_OF_PLANE:
+				case poly_place::planefront:
 					numInFront++;
 					break;
-				case POLYGON_ATTRIB::POLYGON_BEHIND_PLANE:
+				case poly_place::planeback:
 					numBehind++;
 					break;
-				case POLYGON_ATTRIB::POLYGON_STRADDLING_PLANE:
+				case poly_place::onplane:
 					numStraddling++;
 					break;
 				}
@@ -238,43 +238,43 @@ namespace SpatialPartitioning
 		return 0;
 	}
 
-	void SplitPolygon(Polygon& poly, Collision::Plane plane, Polygon& frontPoly, Polygon& backPoly)
+	void Poly_Split(poly_shape& poly, Collision::Plane plane, poly_shape& frontPoly, poly_shape& backPoly)
 	{
 		std::vector<glm::vec3> frontVerts;
 		std::vector<glm::vec3> backVerts;
 		// Test all edges (a, b) starting with edge from last to first vertex
 		glm::vec3 a = poly.vertices[poly.vertices.size() - 1];
-		POINT_ATTRIB aSide = ClassifyPointToPlane(a, plane);
+		point_place aSide = ClassifyPointToPlane(a, plane);
 		// Loop over all edges given by vertex pair (n - 1, n)
 		for (int n = 0; n < poly.vertices.size(); n++) {
 			glm::vec3 b = poly.vertices[n];
-			POINT_ATTRIB bSide = ClassifyPointToPlane(b, plane);
-			if (bSide == POINT_ATTRIB::POINT_IN_FRONT_OF_PLANE) {
-				if (aSide == POINT_ATTRIB::POINT_BEHIND_PLANE) {
+			point_place bSide = ClassifyPointToPlane(b, plane);
+			if (bSide == point_place::point_front) {
+				if (aSide == point_place::point_back) {
 					// Edge (a, b) straddles, output intersection point to both sides
 					glm::vec3 i;
 					float t; //not used
 					//Outputs intersectiion point i between edge and plane
 					IntersectSegmentPlane(a, b, plane, t, i);
-					assert(ClassifyPointToPlane(i, plane) == POINT_ATTRIB::POINT_ON_PLANE);
+					assert(ClassifyPointToPlane(i, plane) == point_place::point_plane);
 					frontVerts.push_back(i);
 					backVerts.push_back(i);
 				}
 				// In all three cases, output b to the front side
 				frontVerts.push_back(b);
 			}
-			else if (bSide == POINT_ATTRIB::POINT_BEHIND_PLANE) {
-				if (aSide == POINT_ATTRIB::POINT_IN_FRONT_OF_PLANE) {
+			else if (bSide == point_place::point_back) {
+				if (aSide == point_place::point_front) {
 					// Edge (a, b) straddles plane, output intersection point
 					glm::vec3 i;
 					float t; //not used
 					//Outputs intersectiion point i between edge and plane
 					IntersectSegmentPlane(a, b, plane, t, i);
-					assert(ClassifyPointToPlane(i, plane) == POINT_ATTRIB::POINT_ON_PLANE);
+					assert(ClassifyPointToPlane(i, plane) == point_place::point_plane);
 					frontVerts.push_back(i);
 					backVerts.push_back(i);
 				}
-				else if (aSide == POINT_ATTRIB::POINT_ON_PLANE) {
+				else if (aSide == point_place::point_plane) {
 					// Output a when edge (a, b) goes from ‘on’ to ‘behind’ plane
 					backVerts.push_back(a);
 				}
@@ -285,7 +285,7 @@ namespace SpatialPartitioning
 				// b is on the plane. In all three cases output b to the front side
 				frontVerts.push_back(b);
 				// In one case, also output b to back side
-				if (aSide == POINT_ATTRIB::POINT_BEHIND_PLANE)
+				if (aSide == point_place::point_back)
 				{
 					backVerts.push_back(b);
 				}
@@ -295,16 +295,16 @@ namespace SpatialPartitioning
 			aSide = bSide;
 		}
 		// Create (and return) two new polygons from the two vertex lists
-		Polygon frontP(frontVerts);
-		Polygon backP(backVerts);
+		poly_shape frontP(frontVerts);
+		poly_shape backP(backVerts);
 
 		frontPoly = frontP;
 		backPoly = backP;
 	}
 
-	std::vector<Polygon> getPolygonsFromModel(const Model& model)
+	std::vector<poly_shape> getPolygonsFromModel(const Model& model)
 	{
-		std::vector<Polygon> polygons;
+		std::vector<poly_shape> polygons;
 
 		for (auto& mesh : model.meshes)
 		{
@@ -314,7 +314,7 @@ namespace SpatialPartitioning
 			for (size_t i = 0; i < idx.size(); i += 3)
 			{
 				std::vector<glm::vec3> vertices{ v[idx[i]].Position , v[idx[i + 1]].Position , v[idx[i + 2]].Position };
-				Polygon poly(vertices); //1 triangle 1 polygon
+				poly_shape poly(vertices); //1 triangle 1 polygon
 				polygons.push_back(poly);
 			}
 		}
@@ -323,12 +323,12 @@ namespace SpatialPartitioning
 		return polygons;
 	}
 
-	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, VisualEntity& obj)
+	std::vector<poly_shape> getPolygonsOfObj(const std::vector<poly_shape>& modelPolys, VisualEntity& obj)
 	{
-		std::vector<Polygon> polygons;
+		std::vector<poly_shape> polygons;
 		for (auto& modelPoly : modelPolys)
 		{
-			Polygon poly(modelPoly);
+			poly_shape poly(modelPoly);
 			for (auto& x : poly.vertices)
 			{
 				x += obj.entityTransform.Position; //account for offset of game OBJECT position in world space (assumes no scaling, rotation)
@@ -338,7 +338,7 @@ namespace SpatialPartitioning
 		return polygons;
 	}
 
-	BSPNode* BuildBSPTree(const std::vector<Polygon>& polygons, int depth)
+	BSPNode* bsp_build(const std::vector<poly_shape>& polygons, int depth)
 	{
 		// Return NULL tree if there are no polygons
 		if (polygons.empty()) return NULL;
@@ -347,30 +347,30 @@ namespace SpatialPartitioning
 		// If criterion for a leaf is matched, create a leaf node from remaining polygons
 		if (polygons.size() <= minPolyCount) //|| ...etc...)
 			return new BSPNode(polygons);
-		// Select best possible partitioning plane based on the input geometry
-		Collision::Plane splitPlane = PickSplittingPlane(polygons);
-		std::vector<Polygon> frontList, backList;
+		// Select best possible partitioning plane based on the input data_g
+		Collision::Plane splitPlane = Splitting_plane(polygons);
+		std::vector<poly_shape> frontList, backList;
 		// Test each polygon against the dividing plane, adding them
 		// to the front list, back list, or both, as appropriate
 		for (int i = 0; i < polygons.size(); i++) {
-			Polygon poly = polygons[i], frontPart, backPart;
-			switch (ClassifyPolygonToPlane(poly, splitPlane)) {
-			case POLYGON_ATTRIB::POLYGON_COPLANAR_WITH_PLANE:
+			poly_shape poly = polygons[i], frontPart, backPart;
+			switch (CheckPolytoPlane(poly, splitPlane)) {
+			case poly_place::coplane:
 				// What’s done in this case depends on what type of tree is being
 				// built. For a node-storing tree, the polygon is stored inside
 				// the node at this level (along with all other polygons coplanar
 				// with the plane). Here, for a leaf-storing tree, coplanar polygons
 				// are sent to either side of the plane. In this case, to the front
 				// side, by falling through to the next case
-			case POLYGON_ATTRIB::POLYGON_IN_FRONT_OF_PLANE:
+			case poly_place::planefront:
 				frontList.push_back(poly);
 				break;
-			case POLYGON_ATTRIB::POLYGON_BEHIND_PLANE:
+			case poly_place::planeback:
 				backList.push_back(poly);
 				break;
-			case POLYGON_ATTRIB::POLYGON_STRADDLING_PLANE:
+			case poly_place::onplane:
 				// Split polygon to plane and send a part to each side of the plane
-				SplitPolygon(poly, splitPlane, frontPart, backPart);
+				Poly_Split(poly, splitPlane, frontPart, backPart);
 				frontList.push_back(frontPart);
 				backList.push_back(backPart);
 				break;
@@ -382,18 +382,18 @@ namespace SpatialPartitioning
 			return new BSPNode(polygons); //leaf case
 
 		// Recursively build child subtrees and return new tree root combining them
-		BSPNode* frontTree = BuildBSPTree(frontList, depth + 1);
-		BSPNode* backTree = BuildBSPTree(backList, depth + 1);
+		BSPNode* tree_front = bsp_build(frontList, depth + 1);
+		BSPNode* tree_back = bsp_build(backList, depth + 1);
 
-		return new BSPNode(frontTree, backTree);
+		return new BSPNode(tree_front, tree_back);
 	}
 
-	BSPNode::BSPNode(const std::vector<Polygon>& polygons) //Leaf nodes
+	BSPNode::BSPNode(const std::vector<poly_shape>& polygons) //Leaf nodes
 	{
 		Model polygonData;
 		polygonData.loadBSPPolygons(polygons);
 		this->currType = Type::LEAF;
-		this->geometry = polygonData;
+		this->data_g = polygonData;
 
 		std::random_device rd;
 		std::default_random_engine eng(rd());

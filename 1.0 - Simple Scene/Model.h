@@ -21,7 +21,7 @@
 using namespace std;
 namespace SpatialPartitioning
 {
-    struct Polygon;
+    struct poly_shape;
 }
 class Model
 {
@@ -44,7 +44,7 @@ public:
     void loadTriangle();
     void updateRay(Vertex finalPoint);
 
-    void loadBSPPolygons(const std::vector<SpatialPartitioning::Polygon>& polygons);
+    void loadBSPPolygons(const std::vector<SpatialPartitioning::poly_shape>& polygons);
     // draws the model, and thus all its meshes
     void Draw();
     void GenericDraw();

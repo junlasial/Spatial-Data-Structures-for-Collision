@@ -91,13 +91,13 @@ int SimpleScene_Quad::Init()
 	intModelID.emplace(5, "object5");
 
 	VisualEntity one;
-	one.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for object1
+	one.UpdateTransform(Transform(glm::vec3{ 0.f, 1.0f, -0.65f }, model_scale)); // Default position and scale for object1
 	one.AssignModelIdentifier("object1");
 	gameObjList.push_back(one);
 	one.entityID = 1;
 
 	VisualEntity two;
-	two.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for object2
+	two.UpdateTransform(Transform(glm::vec3{ 0.f, 1.4f, -0.65f }, model_scale)); // Default position and scale for object2
 	two.AssignModelIdentifier("object2");
 	gameObjList.push_back(two);
 	two.entityID = 2;
@@ -115,7 +115,7 @@ int SimpleScene_Quad::Init()
 	four.entityID = 4;
 
 	VisualEntity five;
-	five.UpdateTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for object5
+	five.UpdateTransform(Transform(glm::vec3{ 0.f, 1.6f, -0.65f }, model_scale)); // Default position and scale for object5
 	five.AssignModelIdentifier("object5");
 	gameObjList.push_back(five);
 	five.entityID = 5;
@@ -137,7 +137,7 @@ int SimpleScene_Quad::Init()
 	// Get polygons for every game object, put in a single vector
 	for (auto& obj : gameObjList)
 	{
-		std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
+		std::vector<SpatialPartitioning::poly_shape> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
 		totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
 	}
 
@@ -279,7 +279,7 @@ int SimpleScene_Quad::Render()
 			//Insert all the game Objs into the list
 			for (auto& obj : gameObjList)
 			{
-				std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
+				std::vector<SpatialPartitioning::poly_shape> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
 				SpatialPartitioning::InsertIntoOctTree(spatialPartitionTree, objPolys);
 			}
 
@@ -294,7 +294,7 @@ int SimpleScene_Quad::Render()
 	{
 		if (BSPTree == nullptr)
 		{
-			BSPTree = SpatialPartitioning::BuildBSPTree(totalObjPolygons, 0);
+			BSPTree = SpatialPartitioning::bsp_build(totalObjPolygons, 0);
 		}
 		else
 		{
@@ -385,7 +385,7 @@ int SimpleScene_Quad::Render()
 				ImGui::Text("Render BSPTree");
 				ImGui::Checkbox("##RenderBSPTree", &renderBSPTree);
 
-				ImGui::Text("Minimum Polygon Count");
+				ImGui::Text("Minimum poly_shape Count");
 				ImGui::SameLine();
 				ImGui::DragInt("##MinPolyCount", &minPolyCount, 1, 30, 300);
 
@@ -422,7 +422,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 
 	glm::vec3 octTreeNodeCentre = node->center;
-	Transform temp(octTreeNodeCentre, 1.f, { node->halfwidth, node->halfwidth, node->halfwidth }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });
+	Transform temp(octTreeNodeCentre, 1.f, { node->mid_width, node->mid_width, node->mid_width }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });
 	aabbTrans = temp;
 
 	//gameObjs.UpdateTransform(aabbTrans);
@@ -447,7 +447,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 	
 	for (size_t i = 0; i < 8; i++)
 	{
-		RenderOctTree(node->pChildren[i], projection, view, ++col); //Recursive call for all the children
+		RenderOctTree(node->childp[i], projection, view, ++col); //Recursive call for all the children
 	}
 }
 
@@ -459,8 +459,8 @@ void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const g
 
 	if (node->currType == SpatialPartitioning::BSPNode::Type::INTERNAL)
 	{
-		RenderBSPTree(node->frontTree, projection, view);
-		RenderBSPTree(node->backTree, projection, view);
+		RenderBSPTree(node->tree_front, projection, view);
+		RenderBSPTree(node->tree_back, projection, view);
 		return;
 	}
 	else
@@ -479,7 +479,7 @@ void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const g
 
 		colour = node->colour;
 		glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
-		node->geometry.tri_draw();
+		node->data_g.tri_draw();
 	}
 
 	
@@ -492,7 +492,7 @@ void SimpleScene_Quad::FreeOctTree(SpatialPartitioning::TreeNode* node)
 		return;
 	for (size_t i = 0; i < 8; i++)
 	{
-		FreeOctTree(node->pChildren[i]); //Free all children
+		FreeOctTree(node->childp[i]); //Free all children
 	}
 	delete node;
 }
@@ -501,10 +501,10 @@ void SimpleScene_Quad::FreeBSPTree(SpatialPartitioning::BSPNode* node)
 {
 	if (node == nullptr)
 		return;
-	if (node->frontTree)
-		FreeBSPTree(node->frontTree);
-	if (node->backTree)
-		FreeBSPTree(node->backTree);
+	if (node->tree_front)
+		FreeBSPTree(node->tree_front);
+	if (node->tree_back)
+		FreeBSPTree(node->tree_back);
 
 	delete node;
 }

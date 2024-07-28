@@ -59,8 +59,8 @@ private:
     bool colored_oct = false;
     SpatialPartitioning::TreeNode* spatialPartitionTree;
     SpatialPartitioning::BSPNode* BSPTree;
-    std::map<const char*, std::vector<SpatialPartitioning::Polygon>> modelPolys;
-    std::vector<SpatialPartitioning::Polygon> totalObjPolygons;
+    std::map<const char*, std::vector<SpatialPartitioning::poly_shape>> modelPolys;
+    std::vector<SpatialPartitioning::poly_shape> totalObjPolygons;
     int spatPartTree = 0;
     bool BSPTreeEnabled = false;
     bool renderBSPTree = true;

@@ -4,81 +4,89 @@
 
 namespace SpatialPartitioning
 {
-	struct Polygon //should be just triangles
+
+	// Enum Classes
+	enum class point_place
 	{
-		std::vector<glm::vec3> vertices;
-		//std::vector<unsigned int> indices;
-		Polygon() {};
-		Polygon(std::vector<glm::vec3>& vertices) : vertices{ vertices } {}
+		point_front,
+		point_back,
+		point_plane
 	};
 
-	std::vector<Polygon> getPolygonsFromModel(const Model& model);
-	std::vector<Polygon> getPolygonsOfObj(const std::vector<Polygon>& modelPolys, VisualEntity& obj);
-
-	struct TreeNode
+	enum class poly_place
 	{
-		glm::vec3 center;
-		float halfwidth;
-		TreeNode* pChildren[8];
-		Model geometry; //store geometry data
-		//std::vector<VisualEntity*> pObjects{};
-		unsigned int depth;
-		TreeNode(glm::vec3 center, float halfWidth, TreeNode* childrenArray) :
-			center{ center }, halfwidth{ halfWidth }, pChildren{ childrenArray } {}
-		int col{};
-
-		glm::vec3 colour{};
+		onplane,
+		planefront,
+		planeback,
+		coplane
 	};
 
-	TreeNode* BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<Polygon>& objs);
-	int InsertIntoOctTree(TreeNode* pNode, const std::vector<Polygon>& objpolys);
-
-
+	// BSPNode Structure
 	struct BSPNode
 	{
+		Model data_g;           // Leaf nodes need to store data_g data
+		unsigned int depth{};   // Depth of the node in the tree
+		glm::vec3 colour{};     // Colour of the node
+
 		enum class Type
 		{
 			INTERNAL,
 			LEAF
 		};
-		//std::vector<Polygon*> geometry{}; 
-		Model geometry; //leaf nodes need to store geometry data
-		Type currType{};
-		BSPNode* frontTree{}; //child node
-		BSPNode* backTree{}; //child node
-		unsigned int depth{}; //depth
-		glm::vec3 colour{};
+		Type currType{};        // Current type of the node
+
+		BSPNode* tree_front{};  // Pointer to the front child node
+		BSPNode* tree_back{};   // Pointer to the back child node
+
+		// Constructor for internal nodes
 		BSPNode(BSPNode* front, BSPNode* back) :
-			frontTree{ front }, backTree{ back }
+			tree_front{ front }, tree_back{ back }
 		{
 			currType = Type::INTERNAL;
 		}
 
-		BSPNode(const std::vector<Polygon>& polygons);// create a leaf node
+		// Constructor for leaf nodes
+		BSPNode(const std::vector<poly_shape>& polygons);
 	};
-	
-	enum class POINT_ATTRIB
+
+
+	// TreeNode Structure
+	struct TreeNode
 	{
-		POINT_IN_FRONT_OF_PLANE,
-		POINT_BEHIND_PLANE,
-		POINT_ON_PLANE
-	};
-	POINT_ATTRIB ClassifyPointToPlane(glm::vec3 p, Collision::Plane plane);
+		glm::vec3 colour{};     // Colour of the node
+		int col{};              // Additional attribute (could be used for color index, etc.)
+		Model data_g;           // Store data_g data
+		glm::vec3 center;       // Center of the node
+		float mid_width;        // Half-width of the node
+		TreeNode* childp[8];    // Array of pointers to child nodes
+		unsigned int depth;     // Depth of the node in the tree
 
-	enum class POLYGON_ATTRIB
+		// Constructor
+		TreeNode(glm::vec3 center, float halfWidth, TreeNode* childrenArray) :
+			center{ center }, mid_width{ halfWidth }, childp{ childrenArray } {}
+	};
+
+
+	// Poly Shape Structure
+	struct poly_shape // should be just triangles
 	{
-		POLYGON_STRADDLING_PLANE,
-		POLYGON_IN_FRONT_OF_PLANE,
-		POLYGON_BEHIND_PLANE,
-		POLYGON_COPLANAR_WITH_PLANE
+		std::vector<glm::vec3> vertices;
+		// std::vector<unsigned int> indices;
+		poly_shape() {};
+		poly_shape(std::vector<glm::vec3>& vertices) : vertices{ vertices } {}
 	};
 
-	Collision::Plane GetPlaneFromPolygon(Polygon poly);
-	POLYGON_ATTRIB ClassifyPolygonToPlane(Polygon poly, Collision::Plane plane);
-	Collision::Plane PickSplittingPlane(const std::vector<Polygon>& polygons);
-	void SplitPolygon(Polygon& poly, Collision::Plane plane, Polygon& frontPoly, Polygon& backPoly);
-
-
-	BSPNode* BuildBSPTree(const std::vector<Polygon>& polygons, int depth);
 	
+
+	// Function Declarations
+	std::vector<poly_shape> getPolygonsFromModel(const Model& model);
+	std::vector<poly_shape> getPolygonsOfObj(const std::vector<poly_shape>& modelPolys, VisualEntity& obj);
+	TreeNode* BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<poly_shape>& objs);
+	int InsertIntoOctTree(TreeNode* pNode, const std::vector<poly_shape>& objpolys);
+	point_place ClassifyPointToPlane(glm::vec3 p, Collision::Plane plane);
+	Collision::Plane polygon_GetPlane(poly_shape poly);
+	poly_place CheckPolytoPlane(poly_shape poly, Collision::Plane plane);
+	Collision::Plane Splitting_plane(const std::vector<poly_shape>& polygons);
+	void Poly_Split(poly_shape& poly, Collision::Plane plane, poly_shape& frontPoly, poly_shape& backPoly);
+	BSPNode* bsp_build(const std::vector<poly_shape>& polygons, int depth);
 }
