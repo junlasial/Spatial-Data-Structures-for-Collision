@@ -24,6 +24,7 @@
     <ProjectGuid>{64d6ea00-afcf-40f6-b76b-bc26ece2046a}</ProjectGuid>
     <RootNamespace>CS350</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Assignment_3</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
