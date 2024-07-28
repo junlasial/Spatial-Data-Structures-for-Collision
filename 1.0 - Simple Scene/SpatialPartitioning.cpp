@@ -1,7 +1,7 @@
 #include "SpatialPartitioning.h"
 #include <array>
 #include <random>
-#include "SimpleScene_Quad.h"
+#include "modelscene.h"
 
 #define MAX_DEPTH 8
 #define MIN_LEAF_SIZE 30

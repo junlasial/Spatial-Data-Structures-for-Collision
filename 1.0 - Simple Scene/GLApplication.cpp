@@ -21,7 +21,8 @@
 // Local/project headers
 #include "../Common/Scene.h"
 #include "shader.hpp"
-#include "SimpleScene_Quad.h"
+#include "modelscene.h"
+
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"

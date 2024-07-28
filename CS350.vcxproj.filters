@@ -21,9 +21,6 @@
     <ClCompile Include="1.0 - Simple Scene\GLApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="1.0 - Simple Scene\SimpleScene_Quad.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Common\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -75,15 +72,15 @@
     <ClCompile Include="1.0 - Simple Scene\Collision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="1.0 - Simple Scene\modelscene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Common\shader.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="1.0 - Simple Scene\SimpleScene_Quad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="1.0 - Simple Scene\Mesh.h">
@@ -132,6 +129,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="1.0 - Simple Scene\Collision.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="1.0 - Simple Scene\modelscene..h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
