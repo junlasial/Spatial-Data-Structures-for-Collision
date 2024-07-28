@@ -18,6 +18,8 @@ float nearestNeighbourWeight = 0.6f;
 float combinedVolWeight = 0.3f;
 float relVolIncreaseWeight = 0.1f;
 int minPolyCount = 30;
+
+	float model_scale = 1;
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 void SimpleScene_Quad::SetupNanoGUI(GLFWwindow* pWindow)
@@ -124,34 +126,33 @@ int SimpleScene_Quad::Init()
 	intModelID.emplace(5, "4Sphere4");
 
 
-
 	GameObject second;
-	second.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere
+	second.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere
 	second.SetModelID("4Sphere");
 	gameObjList.push_back(second);
 	second.m_id = 1;
 
 	GameObject third;
-	third.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere1
+	third.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere1
 	third.SetModelID("4Sphere1");
 	gameObjList.push_back(third);
 	third.m_id = 2;
 
 	GameObject fourth;
-	fourth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere2
+	fourth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere2
 	fourth.SetModelID("4Sphere2");
 	gameObjList.push_back(fourth);
 	fourth.m_id = 3;
 
 	GameObject fifth;
-	fifth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere3
+	fifth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
 	fifth.SetModelID("4Sphere3");
 	gameObjList.push_back(fifth);
 	fifth.m_id = 4;
 
 
 	GameObject sixth;
-	sixth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere3
+	sixth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
 	sixth.SetModelID("4Sphere4");
 	gameObjList.push_back(sixth);
 	sixth.m_id = 5;
@@ -161,7 +162,7 @@ int SimpleScene_Quad::Init()
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	miniMapCam.Position = { 0.f, 0.f, 4.f };
+	miniMapCam.Position = { 0.f, 0.f, 20.f };
 	miniMapCam.Zoom = 60.f;
 
 	// Get polygons from models

@@ -52,7 +52,7 @@ public:
     void GenericDrawTriangle();
     void updateTriangle(std::vector<Vertex>& newVertices);
     void CleanUp();
-
+    void resetTransformations();
 private:
 
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).

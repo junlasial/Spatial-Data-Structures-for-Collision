@@ -54,7 +54,7 @@ void Model::loadModel(std::string const& path)
 
     // process ASSIMP's root node recursively
     processNode(scene->mRootNode, scene);
-
+    resetTransformations();
     if (path.find("quad.obj"))
         loadLine();
 }
@@ -232,4 +232,12 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 
     // return a mesh object created from the extracted mesh data
     return Mesh(vertices, indices);
+}
+
+void Model::resetTransformations() {
+    for (auto& mesh : meshes) {
+        for (auto& vertex : mesh.vertices) {
+            vertex.Position = glm::vec3(0.0f); // Reset position to origin
+        }
+    }
 }
