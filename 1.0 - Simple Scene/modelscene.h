@@ -66,6 +66,6 @@ private:
     bool renderBSPTree = true;
 };
 
-extern int minimumP_count;
+extern int minPolyCount;
 
 #endif //SIMPLE_SCENE_Model_Scene_H

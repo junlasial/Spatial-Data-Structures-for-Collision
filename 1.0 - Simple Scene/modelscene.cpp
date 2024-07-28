@@ -11,7 +11,7 @@
 
 
 
-int minimumP_count = 30;
+int minPolyCount = 30;
 float model_scale = 1.0f;
 
 void Model_Scene::SetupNanoGUI(GLFWwindow* pWindow)
@@ -387,7 +387,7 @@ int Model_Scene::Render()
 
 				ImGui::Text("Minimum poly_shape Count");
 				ImGui::SameLine();
-				ImGui::DragInt("##minimumP_count", &minimumP_count, 1, 30, 300);
+				ImGui::DragInt("##MinPolyCount", &minPolyCount, 1, 30, 300);
 
 				ImGui::EndTabItem();
 			}
