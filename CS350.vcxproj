@@ -148,7 +148,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="1.0 - Simple Scene\BoundingVolume.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\BVHierarchy.cpp" />
     <ClCompile Include="1.0 - Simple Scene\Camera.cpp" />
     <ClCompile Include="1.0 - Simple Scene\Collision.cpp" />
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\backends\imgui_impl_glfw.cpp" />
@@ -170,7 +169,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="1.0 - Simple Scene\BoundingVolume.h" />
-    <ClInclude Include="1.0 - Simple Scene\BVHierarchy.h" />
     <ClInclude Include="1.0 - Simple Scene\Camera.h" />
     <ClInclude Include="1.0 - Simple Scene\Collision.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\backends\imgui_impl_glfw.h" />

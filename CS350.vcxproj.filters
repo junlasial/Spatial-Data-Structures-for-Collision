@@ -72,9 +72,6 @@
     <ClCompile Include="1.0 - Simple Scene\BoundingVolume.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="1.0 - Simple Scene\BVHierarchy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="1.0 - Simple Scene\SpatialPartitioning.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -135,9 +132,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="1.0 - Simple Scene\BoundingVolume.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="1.0 - Simple Scene\BVHierarchy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="1.0 - Simple Scene\SpatialPartitioning.h">

@@ -17,7 +17,6 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-#include "BVHierarchy.h"
 #include "SpatialPartitioning.h"
 //#include "Collision.h"
 
@@ -40,10 +39,8 @@ public:
     int postRender() override;
     inline GLuint GetProgramID() { return programID; }
     inline Camera* GetCamera() { return &camera; }
-    void RenderTree(BVHierarchy::Node** tree, const glm::mat4& projection, const glm::mat4& view);
     void RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col);
     void RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view);
-    void FreeTree(BVHierarchy::Node* node);
     void FreeOctTree(SpatialPartitioning::TreeNode* node);
     void FreeBSPTree(SpatialPartitioning::BSPNode* node);
 private:
@@ -68,7 +65,7 @@ private:
     //GameObject* BVHObjs[7];
     bool BVHenabled;
     bool newTree = true;
-    BVHierarchy::Node** tree;
+   
     bool renderBV = true;
     int renderDepth = 0; 
     bool bottomUpTree = false;
