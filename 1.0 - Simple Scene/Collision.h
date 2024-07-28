@@ -4,8 +4,8 @@
 
 namespace Collision
 {
-	struct Collider{};
-	struct Plane : Collider
+	struct Shape{};
+	struct Plane : Shape
 	{
 		glm::vec3 m_Normal{}; //normalized
 		float m_d{}; // d = dot(n,p) for a given point p on the plane
@@ -13,7 +13,7 @@ namespace Collision
 		Plane(glm::vec3 normal, float d) : m_Normal{ normal }, m_d {d} {}
 	};
 
-	struct Triangle : Collider
+	struct Triangle : Shape
 	{
 		glm::vec3 v1;
 		glm::vec3 v2;
@@ -24,7 +24,7 @@ namespace Collision
 	};
 
 
-	struct AABB : Collider
+	struct AABB : Shape
 	{
 		glm::vec3 m_Min;
 		glm::vec3 m_Max;

@@ -168,7 +168,7 @@ int SimpleScene_Quad::Render()
 		Transform firstTrans(gameObjList[i].AccessTransform().Position, gameObjList[i].AccessTransform().scale, gameObjList[i].AccessTransform().scale2, gameObjList[i].AccessTransform().rotation, gameObjList[i].AccessTransform().rayDirection);
 		firstTrans.triangleVertices = gameObjList[i].AccessTransform().triangleVertices;
 		gameObjList[i].UpdateTransform(firstTrans);
-		if (gameObjList[i].colliderModified)
+		if (gameObjList[i].ShapeModified)
 		{
 			gameObjList[i].boundingVolume = BoundingVolume::createAABB(models[gameObjList[i].FetchModelIdentifier()].combinedVertices);
 			gameObjList[i].boundingVolume.m_Min = gameObjList[i].entityTransform.Position + gameObjList[i].boundingVolume.m_Min;
@@ -177,7 +177,7 @@ int SimpleScene_Quad::Render()
 		
 
 			BVHObjs[i] = &gameObjList[i];
-			gameObjList[i].colliderModified = false;
+			gameObjList[i].ShapeModified = false;
 		}
 		BVHObjs[i] = &gameObjList[i];
 
@@ -216,7 +216,7 @@ int SimpleScene_Quad::Render()
 		if (renderBV && !BSPTreeEnabled && !enable_Oct)
 		{
 			//Render the model of the Bounding Volume
-			if (gameObjs.currentCollider == "AABB")
+			if (gameObjs.currentShape == "AABB")
 			{
 				//AABB Update (for now only translation and scale)
 				//Set transform for the cube based on the AABB size
@@ -241,7 +241,7 @@ int SimpleScene_Quad::Render()
 				}
 				glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 				//Draw
-				models["Cube"].DrawBoundingVolume();
+				models["Cube"].BV_draw();
 			}
 			
 		}
@@ -323,7 +323,7 @@ int SimpleScene_Quad::Render()
 				{
 					for (auto& obj : gameObjList) //Render gameObj controls
 					{
-						obj.colliderModified = true;
+						obj.ShapeModified = true;
 					}
 				}
 
@@ -443,7 +443,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 	glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
 	//Draw
-	models["Cube"].DrawBoundingVolume(); //Render the OctTree nodes
+	models["Cube"].BV_draw(); //Render the OctTree nodes
 	
 	for (size_t i = 0; i < 8; i++)
 	{
@@ -479,7 +479,7 @@ void SimpleScene_Quad::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const g
 
 		colour = node->colour;
 		glUniform3f(glGetUniformLocation(programID, "renderColour"), colour.x, colour.y, colour.z);
-		node->geometry.GenericDrawTriangle();
+		node->geometry.tri_draw();
 	}
 
 	

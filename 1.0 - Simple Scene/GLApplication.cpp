@@ -1,4 +1,4 @@
-// Include standard headers
+// Standard headers
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -6,19 +6,19 @@
 #include <cstring>
 #include <fstream>
 
-// Include GLEW
+// GLEW
 #include <GL/glew.h>
 
-// Include GLFW
+// GLFW
 #include <GLFW/glfw3.h>
 
-// Include GLM
+// GLM
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 
-// Local / project headers
+// Local/project headers
 #include "../Common/Scene.h"
 #include "shader.hpp"
 #include "SimpleScene_Quad.h"
@@ -27,247 +27,215 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
-//Callbacks
+// Callbacks
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
 // Function declarations
-bool savePPMImageFile(std::string& filepath, std::vector<GLfloat>& pixels, int width, int height);
+bool savePPMImageFile(const std::string& filepath, const std::vector<GLfloat>& pixels, int width, int height);
 
-//////////////////////////////////////////////////////////////////////
-GLFWwindow* window;
-Scene* scene;
-SimpleScene_Quad* sceneQuad;
+// Global variables
+GLFWwindow* window = nullptr;
+Scene* scene = nullptr;
+SimpleScene_Quad* sceneQuad = nullptr;
 int windowWidth = 1280;
 int windowHeight = 960;
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
+float lastX = windowWidth / 2.0f;
+float lastY = windowHeight / 2.0f;
 bool firstMouse = true;
 
-// timing
-float deltaTime = 0.0f;	// time between current frame and last frame
+// Timing
+float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-///////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////
 int main()
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	// Initialise GLFW
-	if (!glfwInit())
-	{
-		fprintf(stderr, "Failed to initialize GLFW\n");
-		getchar();
-		return -1;
-	}
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	// Setting up OpenGL properties
-	glfwWindowHint(GLFW_SAMPLES, 1); // change for anti-aliasing
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW\n";
+        std::cin.get();
+        return -1;
+    }
 
-	//glfwSwapInterval(1);
-	// Open a window and create its OpenGL context
-	window = glfwCreateWindow(windowWidth, windowHeight, // window dimensions
-		"Assingment 3 Jun", // window title
-		nullptr, // which monitor (if full-screen mode)
-		nullptr); // if sharing context with another window
-	if (window == nullptr)
-	{
-		fprintf(stderr,
-			"Failed to open GLFW window. If you have an Intel GPU, they are not 3.0 compatible.\n");
-		getchar();
-		glfwTerminate();
-		return -1;
-	}
+    // Setting up OpenGL properties
+    glfwWindowHint(GLFW_SAMPLES, 1);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// OpenGL resource model - "glfwCreateWindow" creates the necessary data storage for the OpenGL
-	// context but does NOT make the created context "current". We MUST make it current with the following
-	// call
-	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetScrollCallback(window, scroll_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
-	// Initialize GLEW
-	glewExperimental = static_cast<GLboolean>(true); // Needed for core profile
-	if (glewInit() != GLEW_OK)
-	{
-		fprintf(stderr, "Failed to initialize GLEW\n");
-		
-		glfwTerminate();
-		return -1;
-	}
+    window = glfwCreateWindow(windowWidth, windowHeight, "Assignment 3 Jun", nullptr, nullptr);
+    if (!window) {
+        std::cerr << "Failed to open GLFW window.\n";
+        std::cin.get();
+        glfwTerminate();
+        return -1;
+    }
 
-	// Ensure we can capture the escape key being pressed below
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
-	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	auto io = ImGui::GetIO(); (void)io;
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW\n";
+        glfwTerminate();
+        return -1;
+    }
 
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-	// Setup Platform/Renderer backends
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init();
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-	// Initialize the scene
-	scene = new SimpleScene_Quad(windowWidth, windowHeight);
-	sceneQuad = dynamic_cast<SimpleScene_Quad*>(scene);
-	// Scene::Init encapsulates setting up the geometry and the texture
-	// information for the scene
-	scene->Init();
+    // Setup ImGui style
+    ImGui::StyleColorsDark();
 
-	// -----------
-	do
-	{
-		// per-frame time logic
-		// --------------------
-		float currentFrame = static_cast<float>(glfwGetTime());
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init();
 
-		// input
-		// -----
-		processInput(window);
-		// Now render the scene
-		// Scene::Display method encapsulates pre-, render, and post- rendering operations
-		scene->Display();
+    // Initialize the scene
+    scene = new SimpleScene_Quad(windowWidth, windowHeight);
+    sceneQuad = dynamic_cast<SimpleScene_Quad*>(scene);
+    scene->Init();
 
-		glfwPollEvents();
-		// Swap buffers
-		glfwSwapBuffers(window);
-	} // Check if the ESC key was pressed or the window was closed
-	while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-		glfwWindowShouldClose(window) == 0);
+    while (!glfwWindowShouldClose(window)) {
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-	// Cleanup IMGUI
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
+        processInput(window);
+        scene->Display();
 
-	scene->CleanUp();
-	// Close OpenGL window and terminate GLFW
-	glfwTerminate();
-	delete scene;
-	return 0;
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+    }
+
+    // Cleanup IMGUI
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    scene->CleanUp();
+    delete scene;
+
+    glfwTerminate();
+    return 0;
 }
 
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-//////////////////////////////////////////////////////
-
-bool savePPMImageFile(std::string& filepath, std::vector<GLfloat>& pixels, int width, int height)
+bool savePPMImageFile(const std::string& filepath, const std::vector<GLfloat>& pixels, int width, int height)
 {
-	std::ofstream  texFile(filepath);
+    std::ofstream texFile(filepath);
+    if (!texFile.is_open()) {
+        return false;
+    }
 
-	texFile << "P3" << std::endl;
-	texFile << width << "  " << height << std::endl;
-	texFile << "255" << std::endl;
-
-	auto it = pixels.begin();
-
-	for (int row = 0; row < height; ++row)
-	{
-		for (int col = 0; col < width; ++col)
-		{
-			texFile << *it++ << " ";
-			texFile << *it++ << " ";
-			texFile << *it++ << " ";
-		}
-
-		texFile << std::endl;
-	}
-
-	texFile.close();
-
-	return true;
+    texFile << "P3\n" << width << " " << height << "\n255\n";
+    auto it = pixels.begin();
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
+            texFile << *it++ << " " << *it++ << " " << *it++ << " ";
+        }
+        texFile << '\n';
+    }
+    texFile.close();
+    return true;
 }
-
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
 
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		sceneQuad->GetCamera()->KB_input(Camera_Movement::FORWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		sceneQuad->GetCamera()->KB_input(Camera_Movement::BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		sceneQuad->GetCamera()->KB_input(Camera_Movement::LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		sceneQuad->GetCamera()->KB_input(Camera_Movement::RIGHT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		sceneQuad->GetCamera()->KB_input(Camera_Movement::UP, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		sceneQuad->GetCamera()->KB_input(Camera_Movement::DOWN, deltaTime);
+    Camera* camera = sceneQuad->GetCamera();
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        camera->KB_input(Camera_Movement::FORWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        camera->KB_input(Camera_Movement::BACKWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        camera->KB_input(Camera_Movement::LEFT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        camera->KB_input(Camera_Movement::RIGHT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        camera->KB_input(Camera_Movement::UP, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        camera->KB_input(Camera_Movement::DOWN, deltaTime);
+    }
 }
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
+// Callback function for resizing the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	// make sure the viewport matches the new window dimensions; note that width and 
-	// height will be significantly larger than specified on retina displays.
-	glViewport(0, 0, width, height);
-	sceneQuad->GetCamera()->width = (float)width;
-	sceneQuad->GetCamera()->height = (float)height;
+    // Update the viewport to match the new window dimensions
+    glViewport(0, 0, width, height);
+
+    // Update the camera's dimensions to match the new window size
+    Camera* camera = sceneQuad->GetCamera();
+    camera->width = static_cast<float>(width);
+    camera->height = static_cast<float>(height);
 }
 
-
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
+// Callback function for scrolling
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	auto io = ImGui::GetIO();
-	if (io.WantCaptureMouse)
-		return;
-	sceneQuad->GetCamera()->Mouse_scroll(static_cast<float>(yoffset));
+    ImGuiIO& io = ImGui::GetIO();
+    // Check if ImGui wants to capture the mouse input; if so, do nothing
+    if (io.WantCaptureMouse)
+        return;
+
+    // Pass the scroll input to the camera for zoom control
+    sceneQuad->GetCamera()->Mouse_scroll(static_cast<float>(yoffset));
 }
 
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-	auto io = ImGui::GetIO();
-	if (io.WantCaptureMouse)
-		return;
-	int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-	float xpos = static_cast<float>(xposIn);
-	float ypos = static_cast<float>(yposIn);
-	if (state == GLFW_PRESS)
-	{
-		if (firstMouse)
-		{
-			lastX = xpos;
-			lastY = ypos;
-			firstMouse = false;
-		}
+    ImGuiIO& io = ImGui::GetIO();
+    // If ImGui wants to capture the mouse, do not process the input
+    if (io.WantCaptureMouse)
+        return;
 
-		float xoffset = xpos - lastX;
-		float yoffset = lastY - ypos;
-		lastX = xpos;
-		lastY = ypos;
+    // Convert mouse coordinates to float
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+    int leftMouseButtonState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 
-		sceneQuad->GetCamera()->Mouse_cam(xoffset, yoffset);
-	}
-	else
-	{
-		lastX = xpos;
-		lastY = ypos;
-	}
-	
+    // Check if the left mouse button is pressed
+    if (leftMouseButtonState == GLFW_PRESS) {
+        // Initialize the lastX and lastY on the first mouse input
+        if (firstMouse) {
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
+        }
+
+        // Calculate the offset in mouse movement
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos; // Inverted since y-coordinates range from bottom to top
+
+        // Update lastX and lastY for the next frame
+        lastX = xpos;
+        lastY = ypos;
+
+        // Pass the mouse offset to the camera
+        sceneQuad->GetCamera()->Mouse_cam(xoffset, yoffset);
+    }
+    else {
+        // Update lastX and lastY if the mouse is not pressed
+        lastX = xpos;
+        lastY = ypos;
+    }
 }
 

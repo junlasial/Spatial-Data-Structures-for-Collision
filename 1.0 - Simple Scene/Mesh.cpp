@@ -34,7 +34,7 @@ void Mesh::GenericDraw()
     glActiveTexture(GL_TEXTURE0);
 }
 
-void Mesh::DrawBoundingVolume()
+void Mesh::BV_draw()
 {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // draw mesh
@@ -48,7 +48,7 @@ void Mesh::DrawBoundingVolume()
 
 }
 
-void Mesh::GenericDrawTriangle()
+void Mesh::tri_draw()
 {
     // draw mesh
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -89,7 +89,7 @@ void Mesh::setupMesh()
 
 }
 
-void Mesh::setupGenericMesh()
+void Mesh::setup_M()
 {
     // create buffers/arrays
     glGenVertexArrays(1, &VAO);
@@ -111,7 +111,7 @@ void Mesh::setupGenericMesh()
 
 }
 
-void Mesh::UpdateGenericMesh()
+void Mesh::update_M()
 {
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);

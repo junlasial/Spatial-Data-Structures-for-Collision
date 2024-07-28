@@ -43,7 +43,7 @@ private:
     std::map<const char*, Model> models; // Contains all the models and their ids (indices)
     std::map<int, const char*> intModelID; // Contains all the models and their ids (indices) in int format
     std::vector<VisualEntity> gameObjList;
-    std::map<const char*, Collision::Collider*> boundingVolume;
+    std::map<const char*, Collision::Shape*> boundingVolume;
 
     std::vector<VisualEntity*> BVHObjs{ 5 };
     bool BVHenabled;

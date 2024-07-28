@@ -48,8 +48,8 @@ public:
     // draws the model, and thus all its meshes
     void Draw();
     void GenericDraw();
-    void DrawBoundingVolume();
-    void GenericDrawTriangle();
+    void BV_draw();
+    void tri_draw();
     void updateTriangle(std::vector<Vertex>& newVertices);
     void CleanUp();
 

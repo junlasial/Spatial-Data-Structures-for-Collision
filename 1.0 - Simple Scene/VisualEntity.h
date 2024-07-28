@@ -17,8 +17,8 @@ public:
 
     Collision::AABB boundingVolume{ glm::vec3(0.f), glm::vec3(0.f) };
 
-    const char* currentCollider = "AABB";
-    bool colliderModified = true;
+    const char* currentShape = "AABB";
+    bool ShapeModified = true;
     void* treeRenderNode = nullptr;
 
 private:

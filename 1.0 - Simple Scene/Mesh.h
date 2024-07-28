@@ -24,12 +24,12 @@ public:
     // constructor
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
     Mesh() = default;
-    void setupGenericMesh();
-    void UpdateGenericMesh();
+    void setup_M();
+    void update_M();
     void Draw();
     void GenericDraw(); //for non index buffer stuff
-    void DrawBoundingVolume();
-    void GenericDrawTriangle();
+    void BV_draw();
+    void tri_draw();
     void CleanUp();
 
 private:

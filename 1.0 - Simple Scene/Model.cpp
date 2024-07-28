@@ -18,16 +18,16 @@ void Model::GenericDraw()
         meshes[i].GenericDraw();
 }
 
-void Model::DrawBoundingVolume()
+void Model::BV_draw()
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
-        meshes[i].DrawBoundingVolume();
+        meshes[i].BV_draw();
 }
 
-void Model::GenericDrawTriangle()
+void Model::tri_draw()
 {
     for (unsigned int i = 0; i < meshes.size(); i++)
-        meshes[i].GenericDrawTriangle();
+        meshes[i].tri_draw();
 }
 
 void Model::CleanUp()
@@ -72,7 +72,7 @@ void Model::loadPoint()
     //indices = { 0, 1, 2, 3, 4, 5 };
     Mesh pointMesh{};
     pointMesh.vertices = vertices;
-    pointMesh.setupGenericMesh();
+    pointMesh.setup_M();
     meshes.push_back(pointMesh);
 }
 
@@ -87,7 +87,7 @@ void Model::loadLine()
     //indices = { 0, 1, 2, 3, 4, 5 };
     Mesh lineMesh{};
     lineMesh.vertices = vertices;
-    lineMesh.setupGenericMesh();
+    lineMesh.setup_M();
     meshes.push_back(lineMesh);
 }
 
@@ -102,14 +102,14 @@ void Model::loadRay()
 
     Mesh pointMesh{};
     pointMesh.vertices = vertices;
-    pointMesh.setupGenericMesh();
+    pointMesh.setup_M();
     meshes.push_back(pointMesh);
 
     vertices = { {glm::vec3(0.f, 0.f, 0.f)}, {glm::vec3(1.f, 0.f, 0.f)}};
 
     Mesh rayMesh{};
     rayMesh.vertices = vertices;
-    rayMesh.setupGenericMesh();
+    rayMesh.setup_M();
     meshes.push_back(rayMesh);
 
     vertices = { {glm::vec3(1-0.1f, 0.f, 0.f)}, {glm::vec3(1+0.1f, 0.f, 0.f)},
@@ -118,7 +118,7 @@ void Model::loadRay()
 
     Mesh pointMesh2{};
     pointMesh2.vertices = vertices;
-    pointMesh2.setupGenericMesh();
+    pointMesh2.setup_M();
     meshes.push_back(pointMesh2);
 }
 
@@ -134,14 +134,14 @@ void Model::loadTriangle()
     //indices = { 0, 1, 2, 3, 4, 5 };
     Mesh triMesh{};
     triMesh.vertices = vertices;
-    triMesh.setupGenericMesh();
+    triMesh.setup_M();
     meshes.push_back(triMesh);
 }
 
 void Model::updateRay(Vertex finalPoint)
 {
     meshes[1].vertices[1] = finalPoint;
-    meshes[1].UpdateGenericMesh();
+    meshes[1].update_M();
 
     std::vector<Vertex> vertices = {
         {glm::vec3(finalPoint.Position.x - 0.1f, finalPoint.Position.y, finalPoint.Position.z)},
@@ -150,7 +150,7 @@ void Model::updateRay(Vertex finalPoint)
         {glm::vec3(finalPoint.Position.x, finalPoint.Position.y , finalPoint.Position.z - 0.1f)},
         {glm::vec3(finalPoint.Position.x, finalPoint.Position.y , finalPoint.Position.z + 0.1f) } };
     meshes[2].vertices = vertices;
-    meshes[2].UpdateGenericMesh();
+    meshes[2].update_M();
     
 }
 
@@ -165,7 +165,7 @@ void Model::loadBSPPolygons(const std::vector<SpatialPartitioning::Polygon>& pol
 
     Mesh polyMesh{};
     polyMesh.vertices = vertices;
-    polyMesh.setupGenericMesh();
+    polyMesh.setup_M();
     meshes.push_back(polyMesh);
 }
 
@@ -173,7 +173,7 @@ void Model::updateTriangle(std::vector<Vertex>& newVertices)
 {
     
     meshes[0].vertices = newVertices;
-    meshes[0].UpdateGenericMesh();
+    meshes[0].update_M();
 }
 
 void Model::processNode(aiNode* node, const aiScene* scene)
