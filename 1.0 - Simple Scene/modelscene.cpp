@@ -61,32 +61,32 @@ int Model_Scene::Init()
 {
 	// Load models
 	Model cube;
-	cube.loadModel("Common/models/cube.obj");
+	cube.loadModel("Global/models/cube.obj");
 	models.emplace("Cube", cube);
 	intModelID.emplace(5, "Cube");
 
 	Model object1;
-	object1.loadModel("Common/models/1/part_a/g0.obj");
+	object1.loadModel("Global/models/1/part_a/g0.obj");
 	models.emplace("object1", object1);
 	intModelID.emplace(2, "object1");
 
 	Model object2;
-	object2.loadModel("Common/models/1/part_a/g1.obj");
+	object2.loadModel("Global/models/1/part_a/g1.obj");
 	models.emplace("object2", object2);
 	intModelID.emplace(3, "object2");
 
 	Model object3;
-	object3.loadModel("Common/models/1/part_b/g0.obj");
+	object3.loadModel("Global/models/1/part_b/g0.obj");
 	models.emplace("object3", object3);
 	intModelID.emplace(4, "object3");
 
 	Model object4;
-	object4.loadModel("Common/models/1/part_b/g1.obj");
+	object4.loadModel("Global/models/1/part_b/g1.obj");
 	models.emplace("object4", object4);
 	intModelID.emplace(1, "object4");
 
 	Model object5;
-	object5.loadModel("Common/models/1/part_a/g2.obj");
+	object5.loadModel("Global/models/1/part_a/g2.obj");
 	models.emplace("object5", object5);
 	intModelID.emplace(5, "object5");
 
@@ -121,7 +121,7 @@ int Model_Scene::Init()
 	five.entityID = 5;
 
 	// Create and compile our GLSL program from the shaders
-	programID = LoadShaders("Common/shaders/Shader.vert", "Common/shaders/Shader.frag");
+	programID = LoadShaders("Global/shaders/Shader.vert", "Global/shaders/Shader.frag");
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
