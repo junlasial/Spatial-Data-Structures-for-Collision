@@ -90,69 +90,92 @@ void SimpleScene_Quad::CleanUp()
 //////////////////////////////////////////////////////
 int SimpleScene_Quad::Init()
 {
-
+	// Load models
 	Model cube;
 	cube.loadModel("Common/models/cube.obj");
 	models.emplace("Cube", cube);
 	intModelID.emplace(1, "Cube");
 
 	Model fourSphere;
-	fourSphere.loadModel("Common/models/lucy_princeton.obj");
+	fourSphere.loadModel("Common/models/1/part_a/g0.obj");
 	models.emplace("4Sphere", fourSphere);
 	intModelID.emplace(2, "4Sphere");
 
-	Model bunny;
-	bunny.loadModel("Common/models/bunny.obj");
-	models.emplace("Bunny", bunny);
-	intModelID.emplace(3, "Bunny");
+	Model fourSphere1;
+	fourSphere1.loadModel("Common/models/1/part_a/g1.obj");
+	models.emplace("4Sphere1", fourSphere1);
+	intModelID.emplace(3, "4Sphere1");
+
+	Model fourSphere2;
+	fourSphere2.loadModel("Common/models/1/part_b/g0.obj");
+	models.emplace("4Sphere2", fourSphere2);
+	intModelID.emplace(4, "4Sphere2");
+
+	Model fourSphere3;
+	fourSphere3.loadModel("Common/models/1/part_b/g1.obj");
+	models.emplace("4Sphere3", fourSphere3);
+	intModelID.emplace(5, "4Sphere3");
 
 
 
-	//Initialise game objectsZZ
-	GameObject first;
-	first.SetTransform(Transform(glm::vec3{ -4.f, -2.f, -2.f }, 1.f));
-	first.SetModelID("Bunny"); //Sphere object
-	gameObjList.push_back(first);
-	first.m_id = 0; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
+	Model fourSphere4;
+	fourSphere4.loadModel("Common/models/1/part_a/g2.obj");
+	models.emplace("4Sphere4", fourSphere4);
+	intModelID.emplace(5, "4Sphere4");
+
+
 
 	GameObject second;
-	second.SetTransform(Transform(glm::vec3{ 1.5, -.2f, -2.5f }, 1.f));
-	second.SetModelID("Bunny"); //Sphere object
+	second.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere
+	second.SetModelID("4Sphere");
 	gameObjList.push_back(second);
-	second.m_id = 1; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
-
+	second.m_id = 1;
 
 	GameObject third;
-	third.SetTransform(Transform(glm::vec3{ 4.5, -.2f, -2.5f }, 1.f));
-	third.SetModelID("4Sphere"); //Sphere object
+	third.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere1
+	third.SetModelID("4Sphere1");
 	gameObjList.push_back(third);
-	third.m_id = 2; //Make sure it corresponds to the index of the gameObjList. Can use std::find.
+	third.m_id = 2;
 
+	GameObject fourth;
+	fourth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere2
+	fourth.SetModelID("4Sphere2");
+	gameObjList.push_back(fourth);
+	fourth.m_id = 3;
+
+	GameObject fifth;
+	fifth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere3
+	fifth.SetModelID("4Sphere3");
+	gameObjList.push_back(fifth);
+	fifth.m_id = 4;
+
+
+	GameObject sixth;
+	sixth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere3
+	sixth.SetModelID("4Sphere4");
+	gameObjList.push_back(sixth);
+	sixth.m_id = 5;
 
 	// Create and compile our GLSL program from the shaders
-	programID = LoadShaders("Common/shaders/DiffuseShader.vert",
-		"Common/shaders/DiffuseShader.frag");
+	programID = LoadShaders("Common/shaders/DiffuseShader.vert", "Common/shaders/DiffuseShader.frag");
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	miniMapCam.Position = { 0.f, 0.f, 4.f };
 	miniMapCam.Zoom = 60.f;
 
-	//Get polygons from models
+	// Get polygons from models
 	for (auto& model : models)
 	{
 		modelPolys.insert({ model.first, SpatialPartitioning::getPolygonsFromModel(model.second) });
 	}
 
-	//Get polygons for every game object, put in a single vector (COSTLY TO UPDATE EVERY VERTEX)
+	// Get polygons for every game object, put in a single vector
 	for (auto& obj : gameObjList)
 	{
 		std::vector<SpatialPartitioning::Polygon> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.GetModelID()], obj);
-
 		totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
-
 	}
-
 
 	return Scene::Init();
 }
