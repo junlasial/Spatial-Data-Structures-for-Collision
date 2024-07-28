@@ -19,8 +19,8 @@
 #include <glm/gtx/transform.hpp>
 
 // Local/project headers
-#include "../Common/Scene.h"
-#include "shader.hpp"
+#include "../Global/Scene.h"
+#include "../Global//shader.hpp"
 #include "modelscene.h"
 
 

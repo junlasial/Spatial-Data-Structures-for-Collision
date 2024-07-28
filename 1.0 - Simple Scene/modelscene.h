@@ -1,7 +1,7 @@
 #ifndef SIMPLE_SCENE_Model_Scene_H
 #define SIMPLE_SCENE_Model_Scene_H
 
-#include "../Common/Scene.h"
+#include "../Global/Scene.h"
 #include <glm/glm.hpp>
 #include <vector>
 #include "VisualEntity.h"
