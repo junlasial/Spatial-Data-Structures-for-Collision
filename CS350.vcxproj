@@ -148,9 +148,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="1.0 - Simple Scene\BoundingVolume.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\Camera.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\Collision.cpp" />
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\imgui.cpp" />
@@ -158,20 +155,20 @@
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\imgui_draw.cpp" />
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\imgui_tables.cpp" />
     <ClCompile Include="1.0 - Simple Scene\extern\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\modelscene.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\VisualEntity.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\GLApplication.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\Mesh.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\Model.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\SpatialPartitioning.cpp" />
-    <ClCompile Include="1.0 - Simple Scene\transCalculate.cpp" />
+    <ClCompile Include="code\BoundingVolume.cpp" />
+    <ClCompile Include="code\Camera.cpp" />
+    <ClCompile Include="code\Collision.cpp" />
+    <ClCompile Include="code\GLApplication.cpp" />
+    <ClCompile Include="code\Mesh.cpp" />
+    <ClCompile Include="code\Model.cpp" />
+    <ClCompile Include="code\modelscene.cpp" />
+    <ClCompile Include="code\SpatialPartitioning.cpp" />
+    <ClCompile Include="code\transCalculate.cpp" />
+    <ClCompile Include="code\VisualEntity.cpp" />
     <ClCompile Include="Global\Scene.cpp" />
     <ClCompile Include="Global\shader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="1.0 - Simple Scene\BoundingVolume.h" />
-    <ClInclude Include="1.0 - Simple Scene\Camera.h" />
-    <ClInclude Include="1.0 - Simple Scene\Collision.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imconfig.h" />
@@ -180,12 +177,15 @@
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_rectpack.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_textedit.h" />
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\imstb_truetype.h" />
-    <ClInclude Include="1.0 - Simple Scene\modelscene.h" />
-    <ClInclude Include="1.0 - Simple Scene\VisualEntity.h" />
-    <ClInclude Include="1.0 - Simple Scene\Mesh.h" />
-    <ClInclude Include="1.0 - Simple Scene\Model.h" />
-    <ClInclude Include="1.0 - Simple Scene\SpatialPartitioning.h" />
-    <ClInclude Include="1.0 - Simple Scene\transCalculate.h" />
+    <ClInclude Include="code\BoundingVolume.h" />
+    <ClInclude Include="code\Camera.h" />
+    <ClInclude Include="code\Collision.h" />
+    <ClInclude Include="code\Mesh.h" />
+    <ClInclude Include="code\Model.h" />
+    <ClInclude Include="code\modelscene.h" />
+    <ClInclude Include="code\SpatialPartitioning.h" />
+    <ClInclude Include="code\transCalculate.h" />
+    <ClInclude Include="code\VisualEntity.h" />
     <ClInclude Include="Global\Scene.h" />
     <ClInclude Include="Global\shader.hpp" />
   </ItemGroup>
