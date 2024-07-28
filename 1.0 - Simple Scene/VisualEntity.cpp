@@ -22,11 +22,6 @@ const char* VisualEntity::FetchModelIdentifier()
 
 void VisualEntity::RenderImGuiControls()
 {
-    ImGui::Text("Transform Controls");
-    ImGui::Separator();
 
-    ImGui::Text("Position");
-    ImGui::SliderFloat("X", &entityTransform.Position.x, -10.0f, 10.0f, "%.2f");
-    ImGui::SliderFloat("Y", &entityTransform.Position.y, -10.0f, 10.0f, "%.2f");
-    ImGui::SliderFloat("Z", &entityTransform.Position.z, -10.0f, 10.0f, "%.2f");
+
 }

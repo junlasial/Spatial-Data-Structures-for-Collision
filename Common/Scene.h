@@ -1,9 +1,6 @@
-//
-// Created by pushpak on 3/28/18.
-//
 
-#ifndef SAMPLE3_2_FBO_SCENE_H
-#define SAMPLE3_2_FBO_SCENE_H
+#ifndef SCENE_H
+#define SCENE_H
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -29,8 +26,7 @@ public:
     // Init: called once when the scene is initialized
     virtual int Init();
 
-    // LoadAllShaders: This is the placeholder for loading the shader files
-    virtual void LoadAllShaders();
+
 
     // Display : encapsulates per-frame behavior of the scene
     virtual int Display();
@@ -48,13 +44,10 @@ public:
     
 
 protected:
-    int _windowHeight, _windowWidth;
+    int window_HEIGHT, window_WIDTH;
 
-    // Common functionality for all scenes
-//    SceneManager                    _scnManager;
-//    std::vector<VertexDataManager>   VAOs;
 
 };
 
 
-#endif //SAMPLE3_2_FBO_SCENE_H
+#endif 

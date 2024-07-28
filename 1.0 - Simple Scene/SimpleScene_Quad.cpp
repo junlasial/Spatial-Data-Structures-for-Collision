@@ -4,7 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "SimpleScene_Quad.h"
 #include <shader.hpp>
-#include "Transform.h"
+#include "transCalculate.h"
 #include "BoundingVolume.h"
 #include <random>
 
@@ -121,7 +121,7 @@ int SimpleScene_Quad::Init()
 	five.entityID = 5;
 
 	// Create and compile our GLSL program from the shaders
-	programID = LoadShaders("Common/shaders/DiffuseShader.vert", "Common/shaders/DiffuseShader.frag");
+	programID = LoadShaders("Common/shaders/Shader.vert", "Common/shaders/Shader.frag");
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -198,9 +198,9 @@ int SimpleScene_Quad::Render()
 
 		glm::mat4 objTrans;
 		if (gameObjs.FetchModelIdentifier() == "Cube")
-			objTrans = projection * view * gameObjTrans.GetModelMtx3f();
+			objTrans = projection * view * gameObjTrans.model_matrix3f_getter();
 		else
-			objTrans = projection * view * gameObjTrans.GetModelMtx();
+			objTrans = projection * view * gameObjTrans.model_matrix_getter();
 		// Uniform transformation (vertex shader)
 		GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
 		glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
@@ -213,7 +213,7 @@ int SimpleScene_Quad::Render()
 		if (!BSPTreeEnabled)
 			models[gameObjs.FetchModelIdentifier()].Draw();
 
-		if (renderBV && !BSPTreeEnabled && !OctTreeEnabled)
+		if (renderBV && !BSPTreeEnabled && !enable_Oct)
 		{
 			//Render the model of the Bounding Volume
 			if (gameObjs.currentCollider == "AABB")
@@ -229,12 +229,12 @@ int SimpleScene_Quad::Render()
 				glm::vec3 aabbCentre = (gameObjs.boundingVolume.m_Max + gameObjs.boundingVolume.m_Min) / 2.f;
 				Transform aabbTrans(aabbCentre, gameObjs.AccessTransform().scale, aabbScale, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });
 
-				objTrans = projection * view * aabbTrans.GetModelMtx3f();
+				objTrans = projection * view * aabbTrans.model_matrix3f_getter();
 				GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
 				glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
 				glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);
 				glm::vec3 colour = glm::vec3(0.f, 1.f, 0.f);
-				if (OctTreeEnabled && spatialPartitionTree)
+				if (enable_Oct && spatialPartitionTree)
 				{
 					colour = glm::vec3(0.f, 1.f, 0.f);
 		
@@ -249,7 +249,7 @@ int SimpleScene_Quad::Render()
 	}
 
 	
-	 if (OctTreeEnabled)
+	 if (enable_Oct)
 	{
 		if (spatialPartitionTree == nullptr)
 		{
@@ -286,7 +286,7 @@ int SimpleScene_Quad::Render()
 		}
 		else
 		{
-			if (renderOctTree)
+			if (oct_render)
 				RenderOctTree(spatialPartitionTree, projection, view, 0);
 		}
 	}
@@ -316,7 +316,7 @@ int SimpleScene_Quad::Render()
 			if (ImGui::BeginTabItem("Bounding Volumes"))
 			{
 				BVHenabled = false;
-				OctTreeEnabled = false;
+				enable_Oct = false;
 				BSPTreeEnabled = false;
 				//runOnce = false;
 				if (ImGui::Button("Update BV (After moving)"))
@@ -365,22 +365,22 @@ int SimpleScene_Quad::Render()
 				(items), 2);
 				if (spatPartTree == 0)
 				{
-					OctTreeEnabled = true;
+					enable_Oct = true;
 					BSPTreeEnabled = false;
 				}
 				else
 				{
 					BSPTreeEnabled = true;
-					OctTreeEnabled = false;
+					enable_Oct = false;
 				}
 				BVHenabled = false;
 				ImGui::Text("Render OctTree");
-				ImGui::Checkbox("##RenderOctTree", &renderOctTree);
+				ImGui::Checkbox("##RenderOctTree", &oct_render);
 
 				ImGui::Text("OctTree Level (Max 3)");
-				ImGui::InputInt("##OctTreeDepth", &octTreeRenderDepth);
-				if (octTreeRenderDepth > 3) octTreeRenderDepth = 3;
-				if (octTreeRenderDepth < 0) octTreeRenderDepth = 0;
+				ImGui::InputInt("##OctTreeDepth", &depth_OctT);
+				if (depth_OctT > 3) depth_OctT = 3;
+				if (depth_OctT < 0) depth_OctT = 0;
 
 				ImGui::Text("Render BSPTree");
 				ImGui::Checkbox("##RenderBSPTree", &renderBSPTree);
@@ -416,7 +416,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 	if (node == nullptr)
 		return;
 
-	if (node->depth < octTreeRenderDepth)
+	if (node->depth < depth_OctT)
 		return; //dont render the deeper nodes
 	Transform aabbTrans;
 
@@ -427,7 +427,7 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 
 	//gameObjs.UpdateTransform(aabbTrans);
 	glm::mat4 objTrans;
-	objTrans = projection * view * aabbTrans.GetModelMtx3f();
+	objTrans = projection * view * aabbTrans.model_matrix3f_getter();
 	GLint vTransformLoc = glGetUniformLocation(programID, "vertexTransform");
 	glUniformMatrix4fv(vTransformLoc, 1, GL_FALSE, &objTrans[0][0]);
 	glUniform1i(glGetUniformLocation(programID, "renderBoundingVolume"), true);

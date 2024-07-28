@@ -39,7 +39,7 @@
     <ClCompile Include="1.0 - Simple Scene\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="1.0 - Simple Scene\Transform.cpp">
+    <ClCompile Include="1.0 - Simple Scene\transCalculate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="1.0 - Simple Scene\VisualEntity.cpp">
@@ -98,7 +98,7 @@
     <ClInclude Include="1.0 - Simple Scene\VisualEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="1.0 - Simple Scene\Transform.h">
+    <ClInclude Include="1.0 - Simple Scene\transCalculate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="1.0 - Simple Scene\extern\imgui\backends\imgui_impl_glfw.h">

@@ -202,17 +202,17 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		sceneQuad->GetCamera()->ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
+		sceneQuad->GetCamera()->KB_input(Camera_Movement::FORWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		sceneQuad->GetCamera()->ProcessKeyboard(Camera_Movement::BACKWARD, deltaTime);
+		sceneQuad->GetCamera()->KB_input(Camera_Movement::BACKWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		sceneQuad->GetCamera()->ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
+		sceneQuad->GetCamera()->KB_input(Camera_Movement::LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		sceneQuad->GetCamera()->ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
+		sceneQuad->GetCamera()->KB_input(Camera_Movement::RIGHT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		sceneQuad->GetCamera()->ProcessKeyboard(Camera_Movement::UP, deltaTime);
+		sceneQuad->GetCamera()->KB_input(Camera_Movement::UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		sceneQuad->GetCamera()->ProcessKeyboard(Camera_Movement::DOWN, deltaTime);
+		sceneQuad->GetCamera()->KB_input(Camera_Movement::DOWN, deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -234,7 +234,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	auto io = ImGui::GetIO();
 	if (io.WantCaptureMouse)
 		return;
-	sceneQuad->GetCamera()->ProcessMouseScroll(static_cast<float>(yoffset));
+	sceneQuad->GetCamera()->Mouse_scroll(static_cast<float>(yoffset));
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -261,7 +261,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 		lastX = xpos;
 		lastY = ypos;
 
-		sceneQuad->GetCamera()->ProcessMouseMovement(xoffset, yoffset);
+		sceneQuad->GetCamera()->Mouse_cam(xoffset, yoffset);
 	}
 	else
 	{

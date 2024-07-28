@@ -1,62 +1,40 @@
-//
-// Created by pushpak on 3/28/18.
-//
-
 #include "Scene.h"
 
-Scene::Scene() : _windowWidth(100), _windowHeight(100)
-{
+// Constructor with default window dimensions
+Scene::Scene() : window_WIDTH(100), window_HEIGHT(100) {}
 
-}
-
+// Constructor with specified window dimensions
 Scene::Scene(int windowWidth, int windowHeight)
-{
-    _windowHeight = windowHeight;
-    _windowWidth = windowWidth;
-}
+    : window_WIDTH(windowWidth), window_HEIGHT(windowHeight) {}
 
+// Destructor to clean up resources
 Scene::~Scene()
 {
     CleanUp();
 }
 
-// Public methods
-
-// Init: called once when the scene is initialized
+// Initialize the scene (to be overridden in derived classes)
 int Scene::Init()
 {
-    return -1;
-}
-
-// LoadAllShaders: This is the placeholder for loading the shader files
-void Scene::LoadAllShaders()
-{
-    return;
+    return -1;  // Placeholder return value, should be overridden
 }
 
 
-
-// Render : per frame rendering of the scene
+// Render the scene per frame (to be overridden in derived classes)
 int Scene::Render()
 {
-    return -1;
+    return -1;  // Placeholder return value, should be overridden
 }
 
-
-
-// CleanUp : clean up resources before destruction
+// Clean up resources before the scene is destroyed
 void Scene::CleanUp()
 {
-    return;
+    // To be implemented in derived classes
 }
 
-// Display : Per-frame execution of the scene
+// Display the scene per frame (calls Render method)
 int Scene::Display()
 {
-
-    Render();
-
-
-
-    return -1;
+    Render();  // Call Render for per-frame rendering
+    return -1; // Placeholder return value, should be overridden
 }
