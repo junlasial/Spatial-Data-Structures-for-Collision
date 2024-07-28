@@ -13,11 +13,11 @@
 #include <random>
 
 
-int indexOfTreeInt = 0;
-float nearestNeighbourWeight = 0.6f;
-float combinedVolWeight = 0.3f;
-float relVolIncreaseWeight = 0.1f;
+
+
 int minPolyCount = 30;
+
+float model_scale = 1.0f;
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 void SimpleScene_Quad::SetupNanoGUI(GLFWwindow* pWindow)
@@ -126,32 +126,32 @@ int SimpleScene_Quad::Init()
 
 
 	GameObject second;
-	second.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere
+	second.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere
 	second.SetModelID("4Sphere");
 	gameObjList.push_back(second);
 	second.m_id = 1;
 
 	GameObject third;
-	third.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere1
+	third.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere1
 	third.SetModelID("4Sphere1");
 	gameObjList.push_back(third);
 	third.m_id = 2;
 
 	GameObject fourth;
-	fourth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere2
+	fourth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere2
 	fourth.SetModelID("4Sphere2");
 	gameObjList.push_back(fourth);
 	fourth.m_id = 3;
 
 	GameObject fifth;
-	fifth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere3
+	fifth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
 	fifth.SetModelID("4Sphere3");
 	gameObjList.push_back(fifth);
 	fifth.m_id = 4;
 
 
 	GameObject sixth;
-	sixth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, 1.f)); // Default position and scale for fourSphere3
+	sixth.SetTransform(Transform(glm::vec3{ 0.f, 0.f, 0.f }, model_scale)); // Default position and scale for fourSphere3
 	sixth.SetModelID("4Sphere4");
 	gameObjList.push_back(sixth);
 	sixth.m_id = 5;
@@ -182,345 +182,6 @@ int SimpleScene_Quad::Init()
 
 void SimpleScene_Quad::CollisionCheck(GameObject& first, GameObject& second)
 {
-
-	//For planes
-	first.setCollided(false);
-	second.setCollided(false);
-	first.GetTransform().rayIntersection = first.GetTransform().rayDirection;
-	second.GetTransform().rayIntersection = second.GetTransform().rayDirection;
-	if (first.GetModelID() == "Sphere") //1) SPHERE FIRST
-	{
-		if (second.GetModelID() == "Sphere")
-		{
-			Collision::Sphere firstSphere(first.GetTransform().Position, first.GetTransform().scale);
-			Collision::Sphere secondSphere(second.GetTransform().Position, second.GetTransform().scale);
-			if (Collision::SphereSphere(firstSphere, secondSphere))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Cube")
-		{
-			Collision::Sphere firstSphere(first.GetTransform().Position, first.GetTransform().scale);
-			Collision::AABB secondAABB(second.GetTransform().Position - second.GetTransform().scale2, second.GetTransform().Position + second.GetTransform().scale2);
-			if (Collision::SphereAABB(firstSphere, secondAABB))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Point")
-		{
-			Collision::Sphere firstSphere(first.GetTransform().Position, first.GetTransform().scale);
-			if (Collision::PointSphere(second.GetTransform().Position, firstSphere))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Plane")
-		{
-			Collision::Sphere firstSphere(first.GetTransform().Position, first.GetTransform().scale);
-			glm::vec3 normal = second.GetTransform().rotationMtx * glm::vec4(0.f, 0.f, 1.f, 1.f); //Apply rotation to the normal here
-			Collision::Plane secondPlane(normal, glm::dot(normal, second.GetTransform().Position));
-			if (Collision::SpherePlane(firstSphere, secondPlane))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-
-		}
-		else if (second.GetModelID() == "Triangle")
-		{
-			Collision::Sphere firstSphere(first.GetTransform().Position, first.GetTransform().scale);
-			Collision::Triangle secondTriangle(second.GetTransform().triangleVertices[0].Position,
-				second.GetTransform().triangleVertices[1].Position, second.GetTransform().triangleVertices[2].Position);
-			if (Collision::SphereTriangle(firstSphere, secondTriangle))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Ray")
-		{
-			Collision::Sphere firstSphere(first.GetTransform().Position, first.GetTransform().scale);
-			Collision::Ray secondRay(second.GetTransform().Position, glm::normalize(second.GetTransform().rayDirection));
-			float t = 0;
-			glm::vec3 q{};
-			if (Collision::RaySphere(secondRay, firstSphere, t, second.GetTransform().rayIntersection))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-
-	}
-	else if (first.GetModelID() == "Cube") //2) CUBE FIRST
-	{
-		if (second.GetModelID() == "Cube")
-		{
-			Collision::AABB firstAABB(first.GetTransform().Position - first.GetTransform().scale2, first.GetTransform().Position + first.GetTransform().scale2);
-			Collision::AABB secondAABB(second.GetTransform().Position + -second.GetTransform().scale2, second.GetTransform().Position + second.GetTransform().scale2);
-			if (Collision::AABBAABB(firstAABB, secondAABB))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Sphere")
-		{
-			Collision::AABB firstAABB(second.GetTransform().Position - second.GetTransform().scale2, second.GetTransform().Position + second.GetTransform().scale2);
-			Collision::Sphere secondSphere(first.GetTransform().Position, first.GetTransform().scale);
-			if (Collision::SphereAABB(secondSphere, firstAABB))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Point")
-		{
-			Collision::AABB firstAABB(first.GetTransform().Position + -first.GetTransform().scale2, first.GetTransform().Position + first.GetTransform().scale2);
-			if (Collision::PointAABB(second.GetTransform().Position, firstAABB))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Triangle")
-		{
-			Collision::AABB firstAABB(first.GetTransform().Position + -first.GetTransform().scale2, first.GetTransform().Position + first.GetTransform().scale2);
-			Collision::Triangle secondTriangle(second.GetTransform().triangleVertices[0].Position,
-				second.GetTransform().triangleVertices[1].Position, second.GetTransform().triangleVertices[2].Position);
-			if (Collision::TriangleAABB(secondTriangle, firstAABB))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Plane")
-		{
-			Collision::AABB firstAABB(first.GetTransform().Position + -first.GetTransform().scale2, first.GetTransform().Position + first.GetTransform().scale2);
-			glm::vec3 normal = second.GetTransform().rotationMtx * glm::vec4(0.f, 0.f, 1.f, 1.f); //Apply rotation to the normal here
-			Collision::Plane secondPlane(normal, glm::dot(normal, second.GetTransform().Position));
-			if (Collision::AABBPlane(firstAABB, secondPlane))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Ray")
-		{
-			Collision::AABB firstAABB(first.GetTransform().Position + -first.GetTransform().scale2, first.GetTransform().Position + first.GetTransform().scale2);
-			Collision::Ray secondRay(second.GetTransform().Position, glm::normalize(second.GetTransform().rayDirection));
-			float t = 0;
-			glm::vec3 q{};
-			if (Collision::RayAABB(secondRay, firstAABB, t, second.GetTransform().rayIntersection))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-	}
-	else if (first.GetModelID() == "Point") //3) POINT FIRST
-	{
-		if (second.GetModelID() == "Sphere")
-		{
-			Collision::Sphere secondSphere(second.GetTransform().Position, second.GetTransform().scale);
-			if (Collision::PointSphere(first.GetTransform().Position, secondSphere))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Cube")
-		{
-			Collision::AABB secondAABB(second.GetTransform().Position + -second.GetTransform().scale2, second.GetTransform().Position + second.GetTransform().scale2);
-			if (Collision::PointAABB(first.GetTransform().Position, secondAABB))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Plane")
-		{
-			glm::vec3 normal = second.GetTransform().rotationMtx * glm::vec4(0.f, 0.f, 1.f, 1.f); //Apply rotation to the normal here
-			Collision::Plane secondPlane(normal, glm::dot(normal, second.GetTransform().Position));
-			if (Collision::PointPlane(first.GetTransform().Position, secondPlane))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Triangle")
-		{
-			Collision::Triangle secondTriangle(second.GetTransform().triangleVertices[0].Position,
-				second.GetTransform().triangleVertices[1].Position, second.GetTransform().triangleVertices[2].Position);
-			if (Collision::PointTriangle(first.GetTransform().Position, secondTriangle))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-	}
-	else if (first.GetModelID() == "Plane") //4) PLANE FIRST
-	{
-		if (second.GetModelID() == "Point")
-		{
-			glm::vec3 normal = first.GetTransform().rotationMtx * glm::vec4(0.f, 0.f, 1.f, 1.f); //Apply rotation to the normal here
-			Collision::Plane firstPlane(normal, glm::dot(normal, first.GetTransform().Position));
-			if (Collision::PointPlane(second.GetTransform().Position, firstPlane))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Cube")
-		{
-			glm::vec3 normal = first.GetTransform().rotationMtx * glm::vec4(0.f, 0.f, 1.f, 1.f); //Apply rotation to the normal here
-			Collision::Plane firstPlane(normal, glm::dot(normal, first.GetTransform().Position));
-			Collision::AABB secondAABB(second.GetTransform().Position + -second.GetTransform().scale2, second.GetTransform().Position + second.GetTransform().scale2);
-			if (Collision::AABBPlane(secondAABB, firstPlane))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Sphere")
-		{
-			glm::vec3 normal = first.GetTransform().rotationMtx * glm::vec4(0.f, 0.f, 1.f, 1.f); //Apply rotation to the normal here
-			Collision::Plane firstPlane(normal, glm::dot(normal, first.GetTransform().Position));
-			Collision::Sphere secondSphere(second.GetTransform().Position, second.GetTransform().scale);
-			if (Collision::SpherePlane(secondSphere, firstPlane))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Ray")
-		{
-			glm::vec3 normal = first.GetTransform().rotationMtx * glm::vec4(0.f, 0.f, 1.f, 1.f); //Apply rotation to the normal here
-			Collision::Plane firstPlane(normal, glm::dot(normal, first.GetTransform().Position));
-			Collision::Ray secondRay(second.GetTransform().Position, second.GetTransform().rayDirection);
-			float t = 0;
-			glm::vec3 q{};
-			if (Collision::RayPlane(secondRay, firstPlane, t, second.GetTransform().rayIntersection))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-			else
-			{
-				first.setCollided(false);
-				second.setCollided(false);
-
-			}
-		}
-
-	}
-	else if (first.GetModelID() == "Triangle") //5) TRIANGLE FIRST
-	{
-		if (second.GetModelID() == "Point")
-		{
-			Collision::Triangle firstTriangle(first.GetTransform().triangleVertices[0].Position,
-				first.GetTransform().triangleVertices[1].Position, first.GetTransform().triangleVertices[2].Position);
-			if (Collision::PointTriangle(second.GetTransform().Position, firstTriangle))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Sphere")
-		{
-			Collision::Triangle firstTriangle(first.GetTransform().triangleVertices[0].Position,
-				first.GetTransform().triangleVertices[1].Position, first.GetTransform().triangleVertices[2].Position);
-			Collision::Sphere secondSphere(second.GetTransform().Position, second.GetTransform().scale);
-			if (Collision::SphereTriangle(secondSphere, firstTriangle))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Cube")
-		{
-			Collision::Triangle firstTriangle(first.GetTransform().triangleVertices[0].Position,
-				first.GetTransform().triangleVertices[1].Position, first.GetTransform().triangleVertices[2].Position);
-			Collision::AABB secondAABB(second.GetTransform().Position + -second.GetTransform().scale2, second.GetTransform().Position + second.GetTransform().scale2);
-			if (Collision::TriangleAABB(firstTriangle, secondAABB))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Ray")
-		{
-			Collision::Triangle firstTriangle(first.GetTransform().triangleVertices[0].Position,
-				first.GetTransform().triangleVertices[1].Position, first.GetTransform().triangleVertices[2].Position);
-			Collision::Ray secondRay(second.GetTransform().Position, glm::normalize(second.GetTransform().rayDirection));
-			float u, v, w, t = 0;
-			glm::vec3 q{};
-			if (Collision::RayTriangle(second.GetTransform().Position, secondRay.m_Direction, firstTriangle.v1, firstTriangle.v2, firstTriangle.v3, u, v, w, t, second.GetTransform().rayIntersection))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-	}
-	else if (first.GetModelID() == "Ray") //6) RAY FIRST
-	{
-		if (second.GetModelID() == "Plane")
-		{
-			glm::vec3 normal = second.GetTransform().rotationMtx * glm::vec4(0.f, 0.f, 1.f, 1.f); //Apply rotation to the normal here
-			Collision::Plane secondPlane(normal, glm::dot(normal, second.GetTransform().Position));
-			Collision::Ray firstRay(first.GetTransform().Position, glm::normalize(first.GetTransform().rayDirection));
-			float t = 0;
-			glm::vec3 q{};
-			if (Collision::RayPlane(firstRay, secondPlane, t, first.GetTransform().rayIntersection))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Sphere")
-		{
-			Collision::Ray firstRay(first.GetTransform().Position, glm::normalize(first.GetTransform().rayDirection));
-			Collision::Sphere secondSphere(second.GetTransform().Position, second.GetTransform().scale);
-			float t = 0;
-			glm::vec3 q{};
-			if (Collision::RaySphere(firstRay, secondSphere, t, first.GetTransform().rayIntersection))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Cube")
-		{
-			Collision::Ray firstRay(first.GetTransform().Position, glm::normalize(first.GetTransform().rayDirection));
-			Collision::AABB secondAABB(second.GetTransform().Position + -second.GetTransform().scale2, second.GetTransform().Position + second.GetTransform().scale2);
-			float t = 0;
-			glm::vec3 q{};
-			if (Collision::RayAABB(firstRay, secondAABB, t, first.GetTransform().rayIntersection))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-		else if (second.GetModelID() == "Triangle")
-		{
-			Collision::Ray firstRay(first.GetTransform().Position, glm::normalize(first.GetTransform().rayDirection));
-			Collision::Triangle secondTriangle(second.GetTransform().triangleVertices[0].Position,
-				second.GetTransform().triangleVertices[1].Position, second.GetTransform().triangleVertices[2].Position);
-			float u, v, w, t = 0;
-			glm::vec3 q{};
-			if (Collision::RayTriangle(first.GetTransform().Position, firstRay.m_Direction, secondTriangle.v1, secondTriangle.v2, secondTriangle.v3, u, v, w, t, first.GetTransform().rayIntersection))
-			{
-				first.setCollided(true);
-				second.setCollided(true);
-			}
-		}
-
-
-	}
 
 
 }
@@ -555,29 +216,6 @@ int SimpleScene_Quad::Render()
 			gameObjList[i].aabbBV.m_Min = gameObjList[i].transform.Position + gameObjList[i].aabbBV.m_Min;
 			gameObjList[i].aabbBV.m_Max = gameObjList[i].transform.Position + gameObjList[i].aabbBV.m_Max;
 
-			if (gameObjList[i].colliderName == "PCA Sphere")
-			{
-				gameObjList[i].sphereBV = BoundingVolume::PCASphere(models[gameObjList[i].GetModelID()].combinedVertices);
-			}
-			else if (gameObjList[i].colliderName == "Larsson's EPOS8")
-			{
-				BoundingVolume::getCurrEPOS() = BoundingVolume::EPOS::EPOS8;
-				gameObjList[i].sphereBV = BoundingVolume::LarssonSphere(models[gameObjList[i].GetModelID()].combinedVertices);
-			}
-			else if (gameObjList[i].colliderName == "Larsson's EPOS12")
-			{
-				BoundingVolume::getCurrEPOS() = BoundingVolume::EPOS::EPOS12;
-				gameObjList[i].sphereBV = BoundingVolume::LarssonSphere(models[gameObjList[i].GetModelID()].combinedVertices);
-			}
-			else if (gameObjList[i].colliderName == "Larsson's EPOS24")
-			{
-				BoundingVolume::getCurrEPOS() = BoundingVolume::EPOS::EPOS24;
-				gameObjList[i].sphereBV = BoundingVolume::LarssonSphere(models[gameObjList[i].GetModelID()].combinedVertices);
-			}
-			else //RITTER'S SPHERE
-			{
-				gameObjList[i].sphereBV = BoundingVolume::RitterSphere(models[gameObjList[i].GetModelID()].combinedVertices);
-			}
 			gameObjList[i].sphereBV.m_Position = gameObjList[i].transform.Position + gameObjList[i].sphereBV.m_Position; //offset sphere position with gameobj position
 
 			BVHObjs[i] = &gameObjList[i];
@@ -588,7 +226,7 @@ int SimpleScene_Quad::Render()
 	}
 
 
-	//CollisionCheck(gameObjList[0], gameObjList[1]);
+
 	// ---------- Rendering ----------
 
 	// Camera transform
@@ -729,13 +367,6 @@ int SimpleScene_Quad::Render()
 	}
 	
 
-	//Minimap CODE SECOND DRAW
-	{
-		//miniMapCam.width = camera.width / 4.f;
-		//miniMapCam.height = camera.height / 4.f;
-		//glViewport((int)(camera.width - miniMapCam.width), (int)(camera.height - miniMapCam.height), (GLsizei)(miniMapCam.width), (GLsizei(miniMapCam.height)));
-
-	}
 
 	//Render IMGUI controls after rendering the scene
 	ImGui_ImplOpenGL3_NewFrame();
@@ -859,9 +490,6 @@ void SimpleScene_Quad::RenderOctTree(SpatialPartitioning::TreeNode* tree, const 
 		return; //dont render the deeper nodes
 	Transform aabbTrans, sphereTrans;
 
-	//float scaleX = (node->BV_AABB.m_Max.x - node->BV_AABB.m_Min.x) * 0.5f;
-	//float scaleY = (node->BV_AABB.m_Max.y - node->BV_AABB.m_Min.y) * 0.5f;
-	//float scaleZ = (node->BV_AABB.m_Max.z - node->BV_AABB.m_Min.z) * 0.5f;
 
 	glm::vec3 octTreeNodeCentre = node->center;
 	Transform temp(octTreeNodeCentre, 1.f, { node->halfwidth, node->halfwidth, node->halfwidth }, { 0.f, 0.f, 0.f }, { 0.f, 0.f, 0.f });

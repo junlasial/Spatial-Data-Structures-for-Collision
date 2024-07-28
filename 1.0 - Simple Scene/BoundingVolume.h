@@ -18,7 +18,7 @@ namespace BoundingVolume
 
 	void GrowSphere(Collision::Sphere& s, glm::vec3& p);
 
-	Collision::Sphere RitterSphere(std::vector<glm::vec3>& vertices);
+	
 
 	void CovarianceMatrix(glm::mat3& cov, std::vector<glm::vec3>& vertices);
 	void SymSchur2(glm::mat3& a, int p, int q, float& c, float& s);
