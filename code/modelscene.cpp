@@ -201,7 +201,7 @@ int Model_Scene::Render()
 				BVHenabled = false;
 				enable_Oct = false;
 				BSPTreeEnabled = false;
-				if (ImGui::Button("Update BV (After moving)"))
+				if (ImGui::Button("Refresh"))
 				{
 					for (auto& obj : gameObjList) // Render gameObj controls
 					{
@@ -209,24 +209,18 @@ int Model_Scene::Render()
 					}
 				}
 
-				ImGui::Text("Render Bounding Volumes");
+				ImGui::Text("Render BV");
 				ImGui::Checkbox("##RenderBV", &renderBV);
 
-				for (size_t i = 0; i < gameObjList.size(); i++) // Render gameObj controls
-				{
-					ImGui::Text("Object %d", i + 1);
-					ImGui::PushID(i);
-					gameObjList[i].RenderImGuiControls();
-					ImGui::PopID();
-				}
+			
 
 				ImGui::EndTabItem();
 			}
 
-			if (ImGui::BeginTabItem("Spatial Partitioning"))
+			if (ImGui::BeginTabItem("Partition"))
 			{
-				ImGui::Text("Click to rebuild tree");
-				if (ImGui::Button("Update Tree"))
+				ImGui::Text("Refresh");
+				if (ImGui::Button("Update"))
 				{
 					if (spatialPartitionTree != nullptr)
 					{
@@ -255,15 +249,14 @@ int Model_Scene::Render()
 					enable_Oct = false;
 				}
 				BVHenabled = false;
-				ImGui::Text("Render OctTree");
+
+				ImGui::Text("Render Oct");
 				ImGui::Checkbox("##RenderOctTree", &oct_render);
 
 				ImGui::Text("OctTree Level (Max 3)");
-				ImGui::InputInt("##OctTreeDepth", &depth_OctT);
-				if (depth_OctT > 3) depth_OctT = 3;
-				if (depth_OctT < 0) depth_OctT = 0;
+				ImGui::SliderInt("##OctTreeDepth", &depth_OctT, 0, 3);
 
-				ImGui::Text("Render BSPTree");
+				ImGui::Text("Render BSP");
 				ImGui::Checkbox("##RenderBSPTree", &renderBSPTree);
 
 				ImGui::Text("Minimum poly_shape Count");
@@ -275,7 +268,7 @@ int Model_Scene::Render()
 			ImGui::EndTabBar();
 		}
 
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+	
 		ImGui::End();
 	}
 
