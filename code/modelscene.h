@@ -31,9 +31,15 @@ public:
     void FreeOctTree(partition::TreeNode* node);
     void FreeBSPTree(partition::node_bsp* node);
 
+
+    void UpdateGameObjectAttributes();
+    void RenderGameObject(VisualEntity& gameObj, const glm::mat4& projection, const glm::mat4& view);
+    void RenderBoundingVolume(VisualEntity& gameObj, const glm::mat4& projection, const glm::mat4& view);
+    void PrepareSpatialPartitioning(const glm::mat4& projection, const glm::mat4& view);
+
 private:
     void initMembers();
-    void SetupNanoGUI(GLFWwindow* pWindow) override;
+   
 
     GLuint programID;
     GLfloat angleOfRotation;

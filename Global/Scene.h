@@ -38,9 +38,7 @@ public:
     // cleanup before destruction
     virtual void CleanUp();
 
-    // NanoGUI stuff
-    virtual void SetupNanoGUI(GLFWwindow *pWwindow) = 0;
-//    virtual void CleanupNanoGUI(GLFWwindow *pWwindow, const nanogui::FormHelper &screen) = 0;
+   
     
 
 protected:

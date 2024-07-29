@@ -3,8 +3,8 @@
 #include <random>
 #include "modelscene.h"
 
-#define MAX_DEPTH 8
-#define MIN_LEAF_SIZE 30
+#define max_D 8
+#define minimum_SIZE 30
 
 namespace partition
 {
@@ -324,46 +324,45 @@ namespace partition
 
 	node_bsp* build_bsp(const std::vector<poly_shape>& polygons, int depth)
 	{
-		// Return NULL tree if there are no polygons
-		if (polygons.empty()) return NULL;
-		// Get number of polygons in the input vector
+		// Return nullptr if there are no polygons
+		if (polygons.empty()) return nullptr;
 
-		// If criterion for a leaf is matched, create a leaf node from remaining polygons
-		if (polygons.size() <= minPolyCount) //|| ...etc...)
+		// If the criterion for a leaf node is met, create a leaf node with the polygons
+		if (polygons.size() <= minPolyCount) // Add additional criteria if needed
 			return new node_bsp(polygons);
-		// Select best possible partitioning plane based on the input data_g
+
+		// Select the best possible partitioning plane based on the input data
 		Collision::Plane splitPlane = Splitting_plane(polygons);
 		std::vector<poly_shape> frontList, backList;
+
 		// Test each polygon against the dividing plane, adding them
 		// to the front list, back list, or both, as appropriate
-		for (int i = 0; i < polygons.size(); i++) {
-			poly_shape poly = polygons[i], frontPart, backPart;
-			switch (CheckPolytoPlane(poly, splitPlane)) {
-			case poly_place::coplane:
-				// What’s done in this case depends on what type of tree is being
-				// built. For a node-storing tree, the polygon is stored inside
-				// the node at this level (along with all other polygons coplanar
-				// with the plane). Here, for a leaf-storing tree, coplanar polygons
-				// are sent to either side of the plane. In this case, to the front
-				// side, by falling through to the next case
-			case poly_place::planefront:
+		for (const auto& poly : polygons) {
+			poly_shape frontPart, backPart;
+			auto placement = CheckPolytoPlane(poly, splitPlane);
+
+			if (placement == poly_place::coplane) {
 				frontList.push_back(poly);
-				break;
-			case poly_place::planeback:
+			}
+			else if (placement == poly_place::planefront) {
+				frontList.push_back(poly);
+			}
+			else if (placement == poly_place::planeback) {
 				backList.push_back(poly);
-				break;
-			case poly_place::onplane:
-				// Split polygon to plane and send a part to each side of the plane
-				Poly_Split(poly, splitPlane, frontPart, backPart);
+			}
+			else if (placement == poly_place::onplane) {
+				// Split polygon into two parts and send a part to each side of the plane
+				// poly is const, so we need to remove the constness to modify it
+				Poly_Split(const_cast<poly_shape&>(poly), splitPlane, frontPart, backPart);
 				frontList.push_back(frontPart);
 				backList.push_back(backPart);
-				break;
 			}
 		}
 
-		// Not even being split case
+
+		// Check for cases where polygons are not split
 		if (backList.size() == polygons.size() || frontList.size() == polygons.size())
-			return new node_bsp(polygons); //leaf case
+			return new node_bsp(polygons); // Leaf case
 
 		// Recursively build child subtrees and return new tree root combining them
 		node_bsp* tree_front = build_bsp(frontList, depth + 1);
@@ -371,6 +370,8 @@ namespace partition
 
 		return new node_bsp(tree_front, tree_back);
 	}
+
+
 
 	node_bsp::node_bsp(const std::vector<poly_shape>& polygons) //Leaf nodes
 	{
