@@ -294,7 +294,7 @@ int Model_Scene::Render()
 	{
 		if (BSPTree == nullptr)
 		{
-			BSPTree = partition::bsp_build(totalObjPolygons, 0);
+			BSPTree = partition::build_bsp(totalObjPolygons, 0);
 		}
 		else
 		{
@@ -451,13 +451,13 @@ void Model_Scene::RenderOctTree(partition::TreeNode* tree, const glm::mat4& proj
 	}
 }
 
-void Model_Scene::RenderBSPTree(partition::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view)
+void Model_Scene::RenderBSPTree(partition::node_bsp* tree, const glm::mat4& projection, const glm::mat4& view)
 {
-	partition::BSPNode* node = tree;
+	partition::node_bsp* node = tree;
 	if (node == nullptr)
 		return;
 
-	if (node->currType == partition::BSPNode::Type::INTERNAL)
+	if (node->currType == partition::node_bsp::Type::INTERNAL)
 	{
 		RenderBSPTree(node->tree_front, projection, view);
 		RenderBSPTree(node->tree_back, projection, view);
@@ -497,7 +497,7 @@ void Model_Scene::FreeOctTree(partition::TreeNode* node)
 	delete node;
 }
 
-void Model_Scene::FreeBSPTree(partition::BSPNode* node)
+void Model_Scene::FreeBSPTree(partition::node_bsp* node)
 {
 	if (node == nullptr)
 		return;

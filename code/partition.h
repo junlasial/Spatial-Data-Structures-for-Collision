@@ -21,8 +21,8 @@ namespace partition
 		coplane
 	};
 
-	// BSPNode Structure
-	struct BSPNode
+	// node_bsp Structure
+	struct node_bsp
 	{
 		Model data_g;           // Leaf nodes need to store data_g data
 		unsigned int depth{};   // Depth of the node in the tree
@@ -35,18 +35,18 @@ namespace partition
 		};
 		Type currType{};        // Current type of the node
 
-		BSPNode* tree_front{};  // Pointer to the front child node
-		BSPNode* tree_back{};   // Pointer to the back child node
+		node_bsp* tree_front{};  // Pointer to the front child node
+		node_bsp* tree_back{};   // Pointer to the back child node
 
 		// Constructor for internal nodes
-		BSPNode(BSPNode* front, BSPNode* back) :
+		node_bsp(node_bsp* front, node_bsp* back) :
 			tree_front{ front }, tree_back{ back }
 		{
 			currType = Type::INTERNAL;
 		}
 
 		// Constructor for leaf nodes
-		BSPNode(const std::vector<poly_shape>& polygons);
+		node_bsp(const std::vector<poly_shape>& polygons);
 	};
 
 
@@ -88,5 +88,13 @@ namespace partition
 	poly_place CheckPolytoPlane(poly_shape poly, Collision::Plane plane);
 	Collision::Plane Splitting_plane(const std::vector<poly_shape>& polygons);
 	void Poly_Split(poly_shape& poly, Collision::Plane plane, poly_shape& frontPoly, poly_shape& backPoly);
-	BSPNode* bsp_build(const std::vector<poly_shape>& polygons, int depth);
+	node_bsp* build_bsp(const std::vector<poly_shape>& polygons, int depth);
+	
+	bool checkStraddle(TreeNode* pNode, const std::vector<poly_shape>& objpolys, int& index);
+	void splitAndInsert(TreeNode* pNode, const std::vector<poly_shape>& objpolys);
+	point_place classifyAndStoreVertex(const glm::vec3& vertex, point_place aSide, Collision::Plane plane,
+		std::vector<glm::vec3>& frontVerts, std::vector<glm::vec3>& backVerts);
+	void handleStraddling(const glm::vec3& a, const glm::vec3& b, Collision::Plane plane,
+		std::vector<glm::vec3>& frontVerts, std::vector<glm::vec3>& backVerts);
+
 }

@@ -27,9 +27,9 @@ public:
     inline GLuint GetProgramID() { return programID; }
     inline Camera* GetCamera() { return &camera; }
     void RenderOctTree(partition::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col);
-    void RenderBSPTree(partition::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view);
+    void RenderBSPTree(partition::node_bsp* tree, const glm::mat4& projection, const glm::mat4& view);
     void FreeOctTree(partition::TreeNode* node);
-    void FreeBSPTree(partition::BSPNode* node);
+    void FreeBSPTree(partition::node_bsp* node);
 
 private:
     void initMembers();
@@ -58,7 +58,7 @@ private:
     int depth_OctT = 0;
     bool colored_oct = false;
     partition::TreeNode* spatialPartitionTree;
-    partition::BSPNode* BSPTree;
+    partition::node_bsp* BSPTree;
     std::map<const char*, std::vector<partition::poly_shape>> modelPolys;
     std::vector<partition::poly_shape> totalObjPolygons;
     int spatPartTree = 0;

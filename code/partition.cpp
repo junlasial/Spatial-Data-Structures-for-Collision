@@ -8,46 +8,52 @@
 
 namespace partition
 {
-	TreeNode* partition::BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<poly_shape>& polys)
-	{
-		// Base case
-		if (level < 0) //max depth
-			return nullptr;
-
-		// 1. Create new node Node( center, mid_width )
-		// 2. Assign childp = nullptr, pObjects = nullptr
-		TreeNode* pNode = new TreeNode(center, halfWidth, nullptr);
-		pNode->depth = level;
-		pNode->col = col; //render diff children diff col
+	// Helper functions for random color generation
+	glm::vec3 generateRandomColor() {
 		std::random_device rd;
 		std::default_random_engine eng(rd());
 		std::uniform_real_distribution<float> distr(0.f, 1.f);
-		pNode->colour = glm::vec3(distr(eng), distr(eng), distr(eng));
-		glm::vec3 offset;
-		float step = halfWidth * 0.5f;
+		return glm::vec3(distr(eng), distr(eng), distr(eng));
+	}
 
-		bool isThereObjInParent = false;
-		for (auto& poly : polys)
-		{
-			if (isThereObjInParent)
-				break;
-			Collision::AABB parentAABB(center + halfWidth * glm::vec3(-1.f, -1.f, -1.f), center + halfWidth * glm::vec3(1.f, 1.f, 1.f));
-
+	// Helper function to check if a polygon is in the parent AABB
+	bool isPolygonInParentAABB(const std::vector<poly_shape>& polys, const glm::vec3& center, float halfWidth) {
+		Collision::AABB parentAABB(center + halfWidth * glm::vec3(-1.f, -1.f, -1.f), center + halfWidth * glm::vec3(1.f, 1.f, 1.f));
+		for (const auto& poly : polys) {
 			Collision::Triangle tri(poly.vertices[0], poly.vertices[1], poly.vertices[2]);
-			if (Collision::AABB_tri(tri, parentAABB))
-			{
-				isThereObjInParent = true;
-				break;
+			if (Collision::AABB_tri(tri, parentAABB)) {
+				return true;
 			}
 		}
+		return false;
+	}
 
-		if (isThereObjInParent == false)
-			return pNode; //stop creating 8 subtrees
+	// Helper function to create a TreeNode
+	TreeNode* createTreeNode(glm::vec3 center, float halfWidth, int level, int col) {
+		TreeNode* pNode = new TreeNode(center, halfWidth, nullptr);
+		pNode->depth = level;
+		pNode->col = col;
+		pNode->colour = generateRandomColor();
+		return pNode;
+	}
 
-		glm::vec3 childrenColours = glm::vec3(distr(eng), distr(eng), distr(eng)); //same depth
-		for (size_t i = 0; i < 8; i++)
-		{
-			// 3. Calculate new center and mid_width
+	TreeNode* BuildOctTree(glm::vec3 center, float halfWidth, int level, int col, std::vector<poly_shape>& polys) {
+		// Base case
+		if (level < 0) return nullptr;
+
+		// Create a new node
+		TreeNode* pNode = createTreeNode(center, halfWidth, level, col);
+
+		// Check if there are polygons in the parent AABB
+		if (!isPolygonInParentAABB(polys, center, halfWidth))
+			return pNode;
+
+		// Recursive subdivision for child nodes
+		glm::vec3 offset;
+		float step = halfWidth * 0.5f;
+		glm::vec3 childrenColours = generateRandomColor();
+
+		for (size_t i = 0; i < 8; i++) {
 			offset.x = ((i & 1) ? step : -step);
 			offset.y = ((i & 2) ? step : -step);
 			offset.z = ((i & 4) ? step : -step);
@@ -58,69 +64,57 @@ namespace partition
 		return pNode;
 	}
 
-	int InsertIntoOctTree(TreeNode* pNode, const std::vector<poly_shape>& objpolys)
-	{
-		int index = 0, straddle = 0;
+
+	bool checkStraddle(TreeNode* pNode, const std::vector<poly_shape>& objpolys, int& index) {
 		int numberOfNodesIntersected = 0;
-		// Compute the octant number [0..7] the object sphere center is in
-		// If straddling any of the dividing x, y, or z planes, exit directly
+		index = -1;
 
-		// Calculate which child cell the center of newObject is in
-		// Check if newObject straddles multiple child nodes
-		if (objpolys.size() > minPolyCount) //Terminating criteria, split into smaller inserts
-		{
-			size_t halfSize = objpolys.size() / 2;
-			std::vector<poly_shape> objpolys1 (objpolys.begin(), objpolys.begin() + halfSize);
-			std::vector<poly_shape> objpolys2 (objpolys.begin() + halfSize, objpolys.end());
-			InsertIntoOctTree(pNode, objpolys1);
-			InsertIntoOctTree(pNode, objpolys2);
-		}
-		
-		for (size_t i = 0; i < 8; i++)
-		{
-			if (straddle) break;
-			if (pNode->childp[i] == nullptr) break;
-			for (auto& poly : objpolys) //check if all the polygons are intersecting the child node
-			{
+		for (int i = 0; i < 8; ++i) {
+			if (pNode->childp[i] == nullptr) continue;
+
+			for (const auto& poly : objpolys) {
 				Collision::Triangle polyTri(poly.vertices[0], poly.vertices[1], poly.vertices[2]);
+				Collision::AABB nodeAABB(pNode->childp[i]->center + pNode->childp[i]->mid_width * glm::vec3(-1.f, -1.f, -1.f),
+					pNode->childp[i]->center + pNode->childp[i]->mid_width * glm::vec3(1.f, 1.f, 1.f));
 
-				Collision::AABB nodeAABB(pNode->childp[i]->center + pNode->childp[i]->mid_width * glm::vec3(-1.f, -1.f, -1.f), pNode->childp[i]->center + pNode->childp[i]->mid_width * glm::vec3(1.f, 1.f, 1.f));
-
-				if (Collision::AABB_tri(polyTri, nodeAABB))
-				{
-					if (numberOfNodesIntersected > 1)
-					{
-						straddle = true; //intersected more than 1 node
-						index = -1; //throw exception later if accessing
-						break;
-					}
+				if (Collision::AABB_tri(polyTri, nodeAABB)) {
+					if (numberOfNodesIntersected > 1) return true; // straddle
+					index = i;
 					++numberOfNodesIntersected;
-					index = i; //if not it will return the index of the child that contains the polygons directly
 				}
 			}
 		}
+		return false;
+	}
 
-		if (!straddle && pNode->childp[index]) //if doesnt straddle
-		{
-			// Does not straddle the child nodes
-			// Push the object into the cell that contains its center 
-			InsertIntoOctTree(pNode->childp[index], objpolys);
+	void splitAndInsert(TreeNode* pNode, const std::vector<poly_shape>& objpolys) {
+		size_t halfSize = objpolys.size() / 2;
+		std::vector<poly_shape> objpolys1(objpolys.begin(), objpolys.begin() + halfSize);
+		std::vector<poly_shape> objpolys2(objpolys.begin() + halfSize, objpolys.end());
+
+		InsertIntoOctTree(pNode, objpolys1);
+		InsertIntoOctTree(pNode, objpolys2);
+	}
+
+	int InsertIntoOctTree(TreeNode* pNode, const std::vector<poly_shape>& objpolys) {
+		if (objpolys.size() > minPolyCount) {
+			splitAndInsert(pNode, objpolys);
+			return 0;
 		}
-		else
-		{
-			// Node straddles the child cells, so store it at parent level  (I  read somewhere we shouldnt
-			// add to both child nodes)
-			// Insert into this node’s list of objects (polygon level not gameobj)
+
+		int index = 0;
+		if (checkStraddle(pNode, objpolys, index)) {
+			// Handle straddle case
 			Model polygonData;
 			polygonData.loadBSPPolygons(objpolys);
 			pNode->data_g = polygonData;
-			//newObject->depth = pNode->depth; //assign depth used for rendering later
-			//newObject->octTreeNode = pNode; //assign depth used for rendering later (diff child diff colour)
-			//pNode->pObjects.push_back(newObject);
+		}
+		else if (index >= 0 && pNode->childp[index]) {
+			// Insert into the specific child node
+			InsertIntoOctTree(pNode->childp[index], objpolys);
 		}
 		return index;
 	}
-
 	// Classify point p to a plane thickened by a given thickness epsilon
 	point_place ClassifyPointToPlane(glm::vec3 p, Collision::Plane plane)
 	{
@@ -238,68 +232,58 @@ namespace partition
 		return 0;
 	}
 
-	void Poly_Split(poly_shape& poly, Collision::Plane plane, poly_shape& frontPoly, poly_shape& backPoly)
-	{
+	point_place classifyAndStoreVertex(const glm::vec3& vertex, point_place aSide, Collision::Plane plane,
+		std::vector<glm::vec3>& frontVerts, std::vector<glm::vec3>& backVerts) {
+		point_place bSide = ClassifyPointToPlane(vertex, plane);
+
+		if (bSide == point_place::point_front) {
+			frontVerts.push_back(vertex);
+		}
+		else if (bSide == point_place::point_back) {
+			backVerts.push_back(vertex);
+		}
+		else {
+			frontVerts.push_back(vertex);
+			if (aSide == point_place::point_back) {
+				backVerts.push_back(vertex);
+			}
+		}
+
+		return bSide;
+	}
+
+	void handleStraddling(const glm::vec3& a, const glm::vec3& b, Collision::Plane plane,
+		std::vector<glm::vec3>& frontVerts, std::vector<glm::vec3>& backVerts) {
+		glm::vec3 intersectionPoint;
+		float t;
+		if (IntersectSegmentPlane(a, b, plane, t, intersectionPoint)) {
+			frontVerts.push_back(intersectionPoint);
+			backVerts.push_back(intersectionPoint);
+		}
+	}
+
+	void Poly_Split(poly_shape& poly, Collision::Plane plane, poly_shape& frontPoly, poly_shape& backPoly) {
 		std::vector<glm::vec3> frontVerts;
 		std::vector<glm::vec3> backVerts;
-		// Test all edges (a, b) starting with edge from last to first vertex
-		glm::vec3 a = poly.vertices[poly.vertices.size() - 1];
-		point_place aSide = ClassifyPointToPlane(a, plane);
-		// Loop over all edges given by vertex pair (n - 1, n)
-		for (int n = 0; n < poly.vertices.size(); n++) {
-			glm::vec3 b = poly.vertices[n];
-			point_place bSide = ClassifyPointToPlane(b, plane);
-			if (bSide == point_place::point_front) {
-				if (aSide == point_place::point_back) {
-					// Edge (a, b) straddles, output intersection point to both sides
-					glm::vec3 i;
-					float t; //not used
-					//Outputs intersectiion point i between edge and plane
-					IntersectSegmentPlane(a, b, plane, t, i);
-					assert(ClassifyPointToPlane(i, plane) == point_place::point_plane);
-					frontVerts.push_back(i);
-					backVerts.push_back(i);
-				}
-				// In all three cases, output b to the front side
-				frontVerts.push_back(b);
-			}
-			else if (bSide == point_place::point_back) {
-				if (aSide == point_place::point_front) {
-					// Edge (a, b) straddles plane, output intersection point
-					glm::vec3 i;
-					float t; //not used
-					//Outputs intersectiion point i between edge and plane
-					IntersectSegmentPlane(a, b, plane, t, i);
-					assert(ClassifyPointToPlane(i, plane) == point_place::point_plane);
-					frontVerts.push_back(i);
-					backVerts.push_back(i);
-				}
-				else if (aSide == point_place::point_plane) {
-					// Output a when edge (a, b) goes from ‘on’ to ‘behind’ plane
-					backVerts.push_back(a);
-				}
-				// In all three cases, output b to the back side
-				backVerts.push_back(b);
-			}
-			else {
-				// b is on the plane. In all three cases output b to the front side
-				frontVerts.push_back(b);
-				// In one case, also output b to back side
-				if (aSide == point_place::point_back)
-				{
-					backVerts.push_back(b);
-				}
-			}
-			// Keep b as the starting point of the next edge
-			a = b;
-			aSide = bSide;
-		}
-		// Create (and return) two new polygons from the two vertex lists
-		poly_shape frontP(frontVerts);
-		poly_shape backP(backVerts);
 
-		frontPoly = frontP;
-		backPoly = backP;
+		glm::vec3 a = poly.vertices.back(); // Last vertex
+		point_place aSide = ClassifyPointToPlane(a, plane);
+
+
+
+		for (const auto& b : poly.vertices) {
+			if (aSide != ClassifyPointToPlane(b, plane)) {
+				handleStraddling(a, b, plane, frontVerts, backVerts);
+
+
+			}
+			aSide = classifyAndStoreVertex(b, aSide, plane, frontVerts, backVerts);
+			a = b;
+		}
+
+		frontPoly = poly_shape(frontVerts);
+
+		backPoly = poly_shape(backVerts);
 	}
 
 	std::vector<poly_shape> getPolygonsFromModel(const Model& model)
@@ -338,7 +322,7 @@ namespace partition
 		return polygons;
 	}
 
-	BSPNode* bsp_build(const std::vector<poly_shape>& polygons, int depth)
+	node_bsp* build_bsp(const std::vector<poly_shape>& polygons, int depth)
 	{
 		// Return NULL tree if there are no polygons
 		if (polygons.empty()) return NULL;
@@ -346,7 +330,7 @@ namespace partition
 
 		// If criterion for a leaf is matched, create a leaf node from remaining polygons
 		if (polygons.size() <= minPolyCount) //|| ...etc...)
-			return new BSPNode(polygons);
+			return new node_bsp(polygons);
 		// Select best possible partitioning plane based on the input data_g
 		Collision::Plane splitPlane = Splitting_plane(polygons);
 		std::vector<poly_shape> frontList, backList;
@@ -379,16 +363,16 @@ namespace partition
 
 		// Not even being split case
 		if (backList.size() == polygons.size() || frontList.size() == polygons.size())
-			return new BSPNode(polygons); //leaf case
+			return new node_bsp(polygons); //leaf case
 
 		// Recursively build child subtrees and return new tree root combining them
-		BSPNode* tree_front = bsp_build(frontList, depth + 1);
-		BSPNode* tree_back = bsp_build(backList, depth + 1);
+		node_bsp* tree_front = build_bsp(frontList, depth + 1);
+		node_bsp* tree_back = build_bsp(backList, depth + 1);
 
-		return new BSPNode(tree_front, tree_back);
+		return new node_bsp(tree_front, tree_back);
 	}
 
-	BSPNode::BSPNode(const std::vector<poly_shape>& polygons) //Leaf nodes
+	node_bsp::node_bsp(const std::vector<poly_shape>& polygons) //Leaf nodes
 	{
 		Model polygonData;
 		polygonData.loadBSPPolygons(polygons);
