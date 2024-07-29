@@ -162,7 +162,7 @@
     <ClCompile Include="code\Mesh.cpp" />
     <ClCompile Include="code\Model.cpp" />
     <ClCompile Include="code\modelscene.cpp" />
-    <ClCompile Include="code\SpatialPartitioning.cpp" />
+    <ClCompile Include="code\partition.cpp" />
     <ClCompile Include="code\transCalculate.cpp" />
     <ClCompile Include="code\VisualEntity.cpp" />
     <ClCompile Include="Global\Scene.cpp" />
@@ -183,7 +183,7 @@
     <ClInclude Include="code\Mesh.h" />
     <ClInclude Include="code\Model.h" />
     <ClInclude Include="code\modelscene.h" />
-    <ClInclude Include="code\SpatialPartitioning.h" />
+    <ClInclude Include="code\partition.h" />
     <ClInclude Include="code\transCalculate.h" />
     <ClInclude Include="code\VisualEntity.h" />
     <ClInclude Include="Global\Scene.h" />

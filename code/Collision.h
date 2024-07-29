@@ -34,9 +34,9 @@ namespace Collision
 
 
 	
-	bool AABBAABB(const AABB& a, const AABB& b);
-	bool AABBPlane(const AABB& b, const Plane& p);
-	bool TriangleAABB(Triangle& t, const AABB& b);
+	bool AABB_self(const AABB& a, const AABB& b);
+	bool AABB_Plane(const AABB& b, const Plane& p);
+	bool AABB_tri(Triangle& t, const AABB& b);
 	
 	
 

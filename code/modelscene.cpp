@@ -121,7 +121,7 @@ int Model_Scene::Init()
 	five.entityID = 5;
 
 	// Create and compile our GLSL program from the shaders
-	programID = LoadShaders("Global/shaders/Shader.vert", "Global/shaders/Shader.frag");
+	programID = load_Shader("Global/shaders/Shader.vert", "Global/shaders/Shader.frag");
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -131,13 +131,13 @@ int Model_Scene::Init()
 	// Get polygons from models
 	for (auto& model : models)
 	{
-		modelPolys.insert({ model.first, SpatialPartitioning::getPolygonsFromModel(model.second) });
+		modelPolys.insert({ model.first, partition::getPolygonsFromModel(model.second) });
 	}
 
 	// Get polygons for every game object, put in a single vector
 	for (auto& obj : gameObjList)
 	{
-		std::vector<SpatialPartitioning::poly_shape> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
+		std::vector<partition::poly_shape> objPolys = partition::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
 		totalObjPolygons.insert(totalObjPolygons.end(), objPolys.begin(), objPolys.end());
 	}
 
@@ -170,7 +170,7 @@ int Model_Scene::Render()
 		gameObjList[i].UpdateTransform(firstTrans);
 		if (gameObjList[i].ShapeModified)
 		{
-			gameObjList[i].boundingVolume = BoundingVolume::createAABB(models[gameObjList[i].FetchModelIdentifier()].combinedVertices);
+			gameObjList[i].boundingVolume = BoundingVolume::makeAABB(models[gameObjList[i].FetchModelIdentifier()].combined_v);
 			gameObjList[i].boundingVolume.m_Min = gameObjList[i].entityTransform.Position + gameObjList[i].boundingVolume.m_Min;
 			gameObjList[i].boundingVolume.m_Max = gameObjList[i].entityTransform.Position + gameObjList[i].boundingVolume.m_Max;
 
@@ -274,13 +274,13 @@ int Model_Scene::Render()
 			float halfWidth = std::max(Max.x - Min.x, Max.y - Min.y);
 			halfWidth = std::max(Max.z - Min.z, halfWidth);
 			halfWidth *= 0.5f;
-			spatialPartitionTree = SpatialPartitioning::BuildOctTree(center, halfWidth, 3, 0, totalObjPolygons);
+			spatialPartitionTree = partition::BuildOctTree(center, halfWidth, 3, 0, totalObjPolygons);
 
 			//Insert all the game Objs into the list
 			for (auto& obj : gameObjList)
 			{
-				std::vector<SpatialPartitioning::poly_shape> objPolys = SpatialPartitioning::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
-				SpatialPartitioning::InsertIntoOctTree(spatialPartitionTree, objPolys);
+				std::vector<partition::poly_shape> objPolys = partition::getPolygonsOfObj(modelPolys[obj.FetchModelIdentifier()], obj);
+				partition::InsertIntoOctTree(spatialPartitionTree, objPolys);
 			}
 
 		}
@@ -294,7 +294,7 @@ int Model_Scene::Render()
 	{
 		if (BSPTree == nullptr)
 		{
-			BSPTree = SpatialPartitioning::bsp_build(totalObjPolygons, 0);
+			BSPTree = partition::bsp_build(totalObjPolygons, 0);
 		}
 		else
 		{
@@ -410,9 +410,9 @@ int Model_Scene::Render()
 
 
 
-void Model_Scene::RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col)
+void Model_Scene::RenderOctTree(partition::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col)
 {
-	SpatialPartitioning::TreeNode* node = tree;
+	partition::TreeNode* node = tree;
 	if (node == nullptr)
 		return;
 
@@ -451,13 +451,13 @@ void Model_Scene::RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::
 	}
 }
 
-void Model_Scene::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view)
+void Model_Scene::RenderBSPTree(partition::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view)
 {
-	SpatialPartitioning::BSPNode* node = tree;
+	partition::BSPNode* node = tree;
 	if (node == nullptr)
 		return;
 
-	if (node->currType == SpatialPartitioning::BSPNode::Type::INTERNAL)
+	if (node->currType == partition::BSPNode::Type::INTERNAL)
 	{
 		RenderBSPTree(node->tree_front, projection, view);
 		RenderBSPTree(node->tree_back, projection, view);
@@ -486,7 +486,7 @@ void Model_Scene::RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::m
 
 }
 
-void Model_Scene::FreeOctTree(SpatialPartitioning::TreeNode* node)
+void Model_Scene::FreeOctTree(partition::TreeNode* node)
 {
 	if (node == nullptr)
 		return;
@@ -497,7 +497,7 @@ void Model_Scene::FreeOctTree(SpatialPartitioning::TreeNode* node)
 	delete node;
 }
 
-void Model_Scene::FreeBSPTree(SpatialPartitioning::BSPNode* node)
+void Model_Scene::FreeBSPTree(partition::BSPNode* node)
 {
 	if (node == nullptr)
 		return;

@@ -27,7 +27,6 @@ public:
     void setup_M();
     void update_M();
     void Draw();
-    void GenericDraw(); //for non index buffer stuff
     void BV_draw();
     void tri_draw();
     void CleanUp();

@@ -1,5 +1,5 @@
 #include "Model.h"
-#include "SpatialPartitioning.h"
+#include "partition.h"
 
 Model::Model(std::string const& path, bool gamma) : gammaCorrection(gamma)
 {
@@ -12,11 +12,6 @@ void Model::Draw()
         meshes[i].Draw();
 }
 
-void Model::GenericDraw()
-{
-    for (unsigned int i = 0; i < meshes.size(); i++)
-        meshes[i].GenericDraw();
-}
 
 void Model::BV_draw()
 {
@@ -49,8 +44,8 @@ void Model::loadModel(std::string const& path)
         cout << "ERROR in assimp " << importer.GetErrorString() << endl;
         return;
     }
-    // retrieve the directory path of the filepath
-    directory = path.substr(0, path.find_last_of('/'));
+    // retrieve the dir path of the filepath
+    dir = path.substr(0, path.find_last_of('/'));
 
     // process ASSIMP's root node recursively
     processNode(scene->mRootNode, scene);
@@ -59,22 +54,6 @@ void Model::loadModel(std::string const& path)
         loadLine();
 }
 
-void Model::loadPoint()
-{
-    // data to fill
-    vector<Vertex> vertices;
-    //vector<unsigned int> indices;
-
-    vertices = { {glm::vec3(-0.25f, 0.f, 0.f)}, {glm::vec3(0.25f, 0.f, 0.f)},
-                 { glm::vec3(0.f, -0.25f, 0.f)},{ glm::vec3(0.f, 0.25f, 0.f)},
-                 { glm::vec3(0.f, 0.f, -0.25f) } , { glm::vec3(0.f, 0.f, 0.25f) }};
-
-    //indices = { 0, 1, 2, 3, 4, 5 };
-    Mesh pointMesh{};
-    pointMesh.vertices = vertices;
-    pointMesh.setup_M();
-    meshes.push_back(pointMesh);
-}
 
 void Model::loadLine()
 {
@@ -91,36 +70,7 @@ void Model::loadLine()
     meshes.push_back(lineMesh);
 }
 
-void Model::loadRay()
-{
-    // data to fill
-    vector<Vertex> vertices;
-    //vector<unsigned int> indices;
-    vertices = { {glm::vec3(-0.25f, 0.f, 0.f)}, {glm::vec3(0.25f, 0.f, 0.f)},
-                 { glm::vec3(0.f, -0.25f, 0.f)},{ glm::vec3(0.f, 0.25f, 0.f)},
-                 { glm::vec3(0.f, 0.f, -0.25f) } , { glm::vec3(0.f, 0.f, 0.25f) } };
 
-    Mesh pointMesh{};
-    pointMesh.vertices = vertices;
-    pointMesh.setup_M();
-    meshes.push_back(pointMesh);
-
-    vertices = { {glm::vec3(0.f, 0.f, 0.f)}, {glm::vec3(1.f, 0.f, 0.f)}};
-
-    Mesh rayMesh{};
-    rayMesh.vertices = vertices;
-    rayMesh.setup_M();
-    meshes.push_back(rayMesh);
-
-    vertices = { {glm::vec3(1-0.1f, 0.f, 0.f)}, {glm::vec3(1+0.1f, 0.f, 0.f)},
-                 { glm::vec3(1+0.f, -0.1f, 0.f)},{ glm::vec3(1+0.f, 0.1f, 0.f)},
-                 { glm::vec3(1+0.f, 0.f, -0.1f) } , { glm::vec3(1+0.f, 0.f, 0.1f) } };
-
-    Mesh pointMesh2{};
-    pointMesh2.vertices = vertices;
-    pointMesh2.setup_M();
-    meshes.push_back(pointMesh2);
-}
 
 void Model::loadTriangle()
 {
@@ -138,23 +88,8 @@ void Model::loadTriangle()
     meshes.push_back(triMesh);
 }
 
-void Model::updateRay(Vertex finalPoint)
-{
-    meshes[1].vertices[1] = finalPoint;
-    meshes[1].update_M();
 
-    std::vector<Vertex> vertices = {
-        {glm::vec3(finalPoint.Position.x - 0.1f, finalPoint.Position.y, finalPoint.Position.z)},
-        {glm::vec3(finalPoint.Position.x + 0.1f, finalPoint.Position.y, finalPoint.Position.z)},
-        {glm::vec3(finalPoint.Position.x, finalPoint.Position.y - 0.1f, finalPoint.Position.z)},{glm::vec3(finalPoint.Position.x, finalPoint.Position.y + 0.1f, finalPoint.Position.z)},
-        {glm::vec3(finalPoint.Position.x, finalPoint.Position.y , finalPoint.Position.z - 0.1f)},
-        {glm::vec3(finalPoint.Position.x, finalPoint.Position.y , finalPoint.Position.z + 0.1f) } };
-    meshes[2].vertices = vertices;
-    meshes[2].update_M();
-    
-}
-
-void Model::loadBSPPolygons(const std::vector<SpatialPartitioning::poly_shape>& polygons)
+void Model::loadBSPPolygons(const std::vector<partition::poly_shape>& polygons)
 {
     vector<Vertex> vertices;
     for (auto& poly : polygons)
@@ -178,58 +113,66 @@ void Model::updateTriangle(std::vector<Vertex>& newVertices)
 
 void Model::processNode(aiNode* node, const aiScene* scene)
 {
-    // process each mesh located at the current node
-    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+    // Process each mesh located at the current node
+    unsigned int meshIndex = 0;
+    while (meshIndex < node->mNumMeshes)
     {
-        // the node object only contains indices to index the actual objects in the scene. 
-        // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
-        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        // The node object only contains indices to the actual objects in the scene.
+        // The scene contains all the data; node is just to keep stuff organized (like relations between nodes).
+        aiMesh* mesh = scene->mMeshes[node->mMeshes[meshIndex]];
         meshes.push_back(processMesh(mesh, scene));
-    }
-    // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
-    for (unsigned int i = 0; i < node->mNumChildren; i++)
-    {
-        processNode(node->mChildren[i], scene);
+        meshIndex++;
     }
 
+    // After we've processed all of the meshes (if any), we then recursively process each of the children nodes
+    unsigned int childIndex = 0;
+    while (childIndex < node->mNumChildren)
+    {
+        processNode(node->mChildren[childIndex], scene);
+        childIndex++;
+    }
 }
 
 Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 {
-    // data to fill
+    // Containers to hold vertex data and indices
     vector<Vertex> vertices;
     vector<unsigned int> indices;
 
-    // walk through each of the mesh's vertices
+    // Iterate over each vertex in the mesh
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
-        glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
-        // positions
+        glm::vec3 vector; // Temporary vector to hold the data
+
+        // Extract vertex positions
         vector.x = mesh->mVertices[i].x;
         vector.y = mesh->mVertices[i].y;
         vector.z = mesh->mVertices[i].z;
-
         vertex.Position = vector;
 
+        // Extract vertex normals
         vector.x = mesh->mNormals[i].x;
         vector.y = mesh->mNormals[i].y;
         vector.z = mesh->mNormals[i].z;
-
         vertex.Normal = vector;
 
+        // Add vertex to the list
         vertices.push_back(vertex);
-        combinedVertices.push_back(vertex.Position);
+        combined_v.push_back(vertex.Position);
     }
-    // now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
+
+    // Iterate over each face (each face is a triangle) to get the indices
     for (unsigned int i = 0; i < mesh->mNumFaces; i++)
     {
         aiFace face = mesh->mFaces[i];
-        // retrieve all indices of the face and store them in the indices vector
+        // Retrieve all indices of the face and store them in the indices vector
         for (unsigned int j = 0; j < face.mNumIndices; j++)
+        {
             indices.push_back(face.mIndices[j]);
+        }
     }
 
-    // return a mesh object created from the extracted mesh data
+    // Create and return a Mesh object using the extracted data
     return Mesh(vertices, indices);
 }

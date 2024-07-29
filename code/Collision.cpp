@@ -3,33 +3,41 @@
 #include <glm/glm.hpp>
 
 
-bool Collision::AABBAABB(const AABB& a, const AABB& b)
+bool Collision::AABB_self(const AABB& a, const AABB& b)
 {
-	// for each axis { X, Y, Z }
+	// Check for overlap on all three axes: X, Y, Z
 	for (unsigned int i = 0; i < 3; ++i)
 	{
-		// if no overlap for the axis, no overlap overall
+		// If there's no overlap on this axis, the boxes don't overlap
 		if (a.m_Max[i] < b.m_Min[i] || b.m_Max[i] < a.m_Min[i])
+		{
 			return false;
+		}
 	}
+	// If there is overlap on all axes, the boxes overlap
 	return true;
 }
 
 
 
 
-// Test if AABB b intersects plane p
-bool Collision::AABBPlane(const AABB& b, const Plane& p)
+bool Collision::AABB_Plane(const AABB& b, const Plane& p)
 {
-	// These two lines not necessary with a (center, extents) AABB representation
-	glm::vec3 c = (b.m_Max + b.m_Min) * 0.5f; // Compute AABB center
-	glm::vec3 e = b.m_Max - c; // Compute positive extents
-	// Compute the projection interval radius of b onto L(t) = b.c + t * p.n
-	float r = e[0] * std::abs(p.m_Normal[0]) + e[1] * std::abs(p.m_Normal[1]) + e[2] * std::abs(p.m_Normal[2]);
-	// Compute distance of box center from plane
-	float s = glm::dot(p.m_Normal, c) - p.m_d;
-	// Intersection occurs when distance s falls within [-r,+r] interval
-	return std::abs(s) <= r;
+	// Calculate the center and half-extents of the AABB
+	glm::vec3 center = (b.m_Max + b.m_Min) * 0.5f;
+	glm::vec3 halfExtents = b.m_Max - center;
+
+	// Calculate the projection interval radius of the AABB onto the plane's normal
+	float radius =
+		halfExtents.x * std::abs(p.m_Normal.x) +
+		halfExtents.y * std::abs(p.m_Normal.y) +
+		halfExtents.z * std::abs(p.m_Normal.z);
+
+	// Calculate the distance from the AABB center to the plane
+	float distance = glm::dot(p.m_Normal, center) - p.m_d;
+
+	// Check if the distance is within the projection interval radius
+	return std::abs(distance) <= radius;
 }
 
 
@@ -37,45 +45,44 @@ bool Collision::AABBPlane(const AABB& b, const Plane& p)
 
 
 
-
-
-
-bool Collision::TriangleAABB(Triangle& t, const AABB& b)
+bool Collision::AABB_tri(Triangle& t, const AABB& b)
 {
-	float p0, p1, p2, r;
-	// Compute box center and extents (if not already given in that format)
-	glm::vec3 c = (b.m_Min + b.m_Max) * 0.5f;
-	float e0 = (b.m_Max.x - b.m_Min.x) * 0.5f;
-	float e1 = (b.m_Max.y - b.m_Min.y) * 0.5f;
-	float e2 = (b.m_Max.z - b.m_Min.z) * 0.5f;
-	// Translate triangle as conceptually moving AABB to origin
-	t.v1 = t.v1 - c;
-	t.v2 = t.v2 - c;
-	t.v3 = t.v3 - c;
-	using Vector = glm::vec3;
-	// Compute edge vectors for triangle
-	Vector f0 = t.v2 - t.v1, f1 = t.v3 - t.v2, f2 = t.v1 - t.v3;
+    // Calculate the center and half-extents of the AABB
+    glm::vec3 center = (b.m_Min + b.m_Max) * 0.5f;
+    glm::vec3 halfExtents = (b.m_Max - b.m_Min) * 0.5f;
 
-	// Test axes a00..a22 (category 3)
-	// Test axis a00
-	p0 = t.v1.z * t.v2.y - t.v1.y * t.v2.z;
-	p2 = t.v3.z * (t.v2.y - t.v1.y) - t.v3.z * (t.v2.z - t.v1.z);
-	r = e1 * std::abs(f0.z) + e2 * std::abs(f0.y);
-	if (std::max(-std::max(p0, p2), std::min(p0, p2)) > r) return 0; // Axis is a separating axis
-	// Repeat similar tests for remaining axes a01..a22
-		// Test the three axes corresponding to the face normals of AABB b (category 1).
-		// Exit if...
-		// ... [-e0, e0] and [min(v0.x,v1.x,v2.x), max(v0.x,v1.x,v2.x)] do not overlap
-	if (std::max({ t.v1.x, t.v2.x, t.v3.x }) < -e0 || std::min({ t.v1.x, t.v2.x, t.v3.x }) > e0) return 0;
-	// ... [-e1, e1] and [min(v0.y,v1.y,v2.y), max(v0.y,v1.y,v2.y)] do not overlap
-	if (std::max({ t.v1.y, t.v2.y, t.v3.y }) < -e1 || std::min({ t.v1.y, t.v2.y, t.v3.y }) > e1) return 0;
-	// ... [-e2, e2] and [min(v0.z,v1.z,v2.z), max(v0.z,v1.z,v2.z)] do not overlap
-	if (std::max({ t.v1.z, t.v2.z, t.v3.z }) < -e2 || std::min({ t.v1.z, t.v2.z, t.v3.z }) > e2) return 0;
+    // Translate triangle vertices to AABB's center
+    t.v1 -= center;
+    t.v2 -= center;
+    t.v3 -= center;
 
-	//Test separating axis corresponding to triangle face normal (category 2)
-	glm::vec3 normal = glm::cross(f0, f1);
-	Plane p(normal, glm::dot(normal, t.v1));
-	return AABBPlane(b, p);
+    using Vector = glm::vec3;
+
+    // Compute the edge vectors of the triangle
+    Vector f0 = t.v2 - t.v1;
+    Vector f1 = t.v3 - t.v2;
+    Vector f2 = t.v1 - t.v3;
+
+    // Check for separating axes based on the triangle's edge vectors and AABB's axes
+    // Test axis for the cross product of AABB's and triangle's edges
+    float p0, p1, p2, r;
+
+    // Test axis a00
+    p0 = t.v1.z * t.v2.y - t.v1.y * t.v2.z;
+    p2 = t.v3.z * (t.v2.y - t.v1.y) - t.v3.z * (t.v2.z - t.v1.z);
+    r = halfExtents.y * std::abs(f0.z) + halfExtents.z * std::abs(f0.y);
+    if (std::max(-std::max(p0, p2), std::min(p0, p2)) > r) return false; // Separating axis found
+
+    // Check for overlap on all three axes: X, Y, Z
+    if (std::max({ t.v1.x, t.v2.x, t.v3.x }) < -halfExtents.x || std::min({ t.v1.x, t.v2.x, t.v3.x }) > halfExtents.x)
+        return false;
+    if (std::max({ t.v1.y, t.v2.y, t.v3.y }) < -halfExtents.y || std::min({ t.v1.y, t.v2.y, t.v3.y }) > halfExtents.y)
+        return false;
+    if (std::max({ t.v1.z, t.v2.z, t.v3.z }) < -halfExtents.z || std::min({ t.v1.z, t.v2.z, t.v3.z }) > halfExtents.z)
+        return false;
+
+    // Test if the triangle's plane intersects the AABB
+    glm::vec3 normal = glm::cross(f0, f1);
+    Plane p(normal, glm::dot(normal, t.v1));
+    return AABB_Plane(b, p);
 }
-
-

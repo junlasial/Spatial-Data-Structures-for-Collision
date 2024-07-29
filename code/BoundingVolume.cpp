@@ -4,20 +4,26 @@ namespace BoundingVolume
 {
 
 
-	Collision::AABB createAABB(std::vector<glm::vec3>& vertices)
+	Collision::AABB makeAABB(std::vector<glm::vec3>& vertices)
 	{
 		glm::vec3 Min = glm::vec3(FLT_MAX);
 		glm::vec3 Max = glm::vec3(-FLT_MAX);
-		for (unsigned int i = 0; i < vertices.size(); ++i)
-		{
-			glm::vec3 pt = vertices.at(i);
-			Min.x = std::min(Min.x, vertices[i].x);
-			Min.y = std::min(Min.y, vertices[i].y);
-			Min.z = std::min(Min.z, vertices[i].z);
-			Max.x = std::max(Max.x, vertices[i].x);
-			Max.y = std::max(Max.y, vertices[i].y);
-			Max.z = std::max(Max.z, vertices[i].z);
-		}
-		return Collision::AABB(Min, Max);
+        // Loop through each vertex in the vector
+        for (const glm::vec3& pt : vertices)
+        {
+            // Update the minimum coordinates for the AABB
+            if (pt.x < Min.x) Min.x = pt.x;
+            if (pt.y < Min.y) Min.y = pt.y;
+            if (pt.z < Min.z) Min.z = pt.z;
+
+            // Update the maximum coordinates for the AABB
+            if (pt.x > Max.x) Max.x = pt.x;
+            if (pt.y > Max.y) Max.y = pt.y;
+            if (pt.z > Max.z) Max.z = pt.z;
+        }
+
+        // Return the constructed AABB using the min and max points
+        return Collision::AABB(Min, Max);
+
 	}
 }

@@ -1,74 +1,74 @@
 #pragma once
 
-// Include GLEW for OpenGL functionalities
+// GLEW for handling OpenGL extensions
 #include <GL/glew.h>
-// Include GLM for vector and matrix operations
+// GLM for mathematics operations related to vectors and matrices
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-// Enum class defining possible camera movement directions
+// Enum class for defining camera movement directions
 enum class Camera_Movement {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
+    FORWARD,    // Move camera forward
+    BACKWARD,   // Move camera backward
+    LEFT,       // Move camera left
+    RIGHT,      // Move camera right
+    UP,         // Move camera up
+    DOWN        // Move camera down
 };
 
-// Default camera values
-const float YAW = -90.0f;          // Default yaw angle
-const float PITCH = 0.0f;          // Default pitch angle
-const float SPEED = 3.0f;          // Default camera movement speed
-const float SENSITIVITY = 0.05f;   // Default mouse sensitivity
-const float ZOOM = 15.0f;          // Default camera zoom
+// Default camera configuration values
+const float YAW = -90.0f;          // Initial yaw angle
+const float PITCH = 0.0f;          // Initial pitch angle
+const float SPEED = 3.0f;          // Camera movement speed
+const float SENSITIVITY = 0.05f;   // Mouse movement sensitivity
+const float ZOOM = 15.0f;          // Camera zoom level
 
-// Screen settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+// Screen dimensions
+const unsigned int width_screen = 1600;  // Default screen width
+const unsigned int height_screen = 900; // Default screen height
 
-// Abstract camera class to process input and calculate corresponding Euler Angles, Vectors, and Matrices for OpenGL use
+// Camera class for handling movement and orientation
 class Camera {
 public:
-    // Camera attributes
-    glm::vec3 Position;    // Camera position in world space
+    // Position and orientation attributes
+    glm::vec3 Position;    // Camera's position in world coordinates
     glm::vec3 Front;       // Direction the camera is facing
-    glm::vec3 Up;          // Up vector in world space
-    glm::vec3 Right;       // Right vector in world space
-    glm::vec3 Down;        // Down vector in world space
-    glm::vec3 WorldUp;     // Up vector used for calculating the camera's up vector
+    glm::vec3 Up;          // Up vector in world coordinates
+    glm::vec3 Right;       // Right vector in world coordinates
+    glm::vec3 Down;        // Down vector in world coordinates
+    glm::vec3 WorldUp;     // Global up vector
 
-    // Euler Angles
-    float Yaw;             // Yaw angle for rotation around the Y axis
-    float Pitch;           // Pitch angle for rotation around the X axis
+    // Euler Angles for camera rotation
+    float Yaw;             // Rotation around the Y axis
+    float Pitch;           // Rotation around the X axis
 
-    // Camera options
-    float MovementSpeed;   // Speed of camera movement
-    float MouseSensitivity;// Sensitivity of mouse movement
-    float Zoom;            // Camera zoom level
-    float width = 1280.0f; // Default screen width
-    float height = 960.0f; // Default screen height
+    // Configuration for camera options
+    float MovementSpeed;   // Speed at which the camera moves
+    float MouseSensitivity;// Sensitivity to mouse movement
+    float Zoom;            // Zoom level for the camera
+    float width = 1600.0f; // Width of the screen
+    float height = 900.0f; // Height of the screen
 
-    // Constructor with vectors
+    // Constructor initializing camera with vectors for position and up direction, along with yaw and pitch
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 8.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH);
 
-    // Constructor with scalar values
+    // Constructor initializing camera with individual float values for position and up direction, along with yaw and pitch
     Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch);
 
-    // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
+    // Returns the view matrix for rendering the scene from the camera's perspective
     glm::mat4 GetViewMatrix() const;
 
-    // Processes keyboard input for camera movement, accepts direction and delta time
+    // Handles keyboard input to move the camera based on the given direction and time delta
     void KB_input(Camera_Movement direction, float deltaTime);
 
-    // Processes mouse movement input for camera orientation, expects offset values and optional pitch constraint
+    // Handles mouse movement to adjust the camera's orientation, with optional pitch constraint
     void Mouse_cam(float xoffset, float yoffset, GLboolean constrainPitch = true);
 
-    // Processes mouse scroll input for zoom control, expects the scroll offset
+    // Handles mouse scroll input to zoom the camera in or out
     void Mouse_scroll(float yoffset);
 
-    //void RenderMiniMapCam(); // Optional method for rendering a minimap camera
+    //void RenderMiniMapCam(); // Optional function to render a minimap view from the camera
 private:
-    // Calculates the front vector from the camera's updated Euler Angles
-    void updateCameraVectors();
+    // Updates the camera vectors based on the current yaw and pitch values
+    void updateVec();
 };

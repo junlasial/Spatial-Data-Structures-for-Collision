@@ -23,16 +23,7 @@ void Mesh::Draw()
     glActiveTexture(GL_TEXTURE0);
 }
 
-void Mesh::GenericDraw()
-{
-    // draw mesh
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
-    glBindVertexArray(0);
 
-    // always good practice to set everything back to defaults once configured.
-    glActiveTexture(GL_TEXTURE0);
-}
 
 void Mesh::BV_draw()
 {

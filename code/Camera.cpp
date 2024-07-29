@@ -1,19 +1,30 @@
 #include "Camera.h"
 
-Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
-    : Position(position), WorldUp(up), Yaw(yaw), Pitch(pitch),
-    Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED),
-    MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
-    updateCameraVectors();
+// Constructor with vectors for position and up direction, initializes camera orientation
+Camera::Camera(glm::vec3 startPosition, glm::vec3 upDirection, float startYaw, float startPitch)
+    : Position(startPosition),
+    WorldUp(upDirection),
+    Yaw(startYaw),
+    Pitch(startPitch),
+    Front(glm::vec3(0.0f, 0.0f, -8.0f)),
+    MovementSpeed(SPEED),
+    MouseSensitivity(SENSITIVITY),
+    Zoom(ZOOM)
+{
+    // Initialize the camera vectors based on the given yaw and pitch
+    updateVec();
 }
 
-Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch)
-    : Camera(glm::vec3(posX, posY, posZ), glm::vec3(upX, upY, upZ), yaw, pitch) {}
+// Constructor with individual float values for position and up direction, uses the vector constructor
+Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float startYaw, float startPitch)
+    : Camera(glm::vec3(posX, posY, posZ), glm::vec3(upX, upY, upZ), startYaw, startPitch) {}
 
+// Returns the view matrix calculated using the camera's position, front, and up vectors
 glm::mat4 Camera::GetViewMatrix() const {
     return glm::lookAt(Position, Position + Front, Up);
 }
 
+// Processes keyboard input to move the camera based on the direction and delta time
 void Camera::KB_input(Camera_Movement direction, float deltaTime) {
     float velocity = MovementSpeed * deltaTime;
 
@@ -37,35 +48,39 @@ void Camera::KB_input(Camera_Movement direction, float deltaTime) {
     }
 }
 
+// Updates the camera's front, right, and up vectors based on the current yaw and pitch angles
+void Camera::updateVec() {
+    glm::vec3 newFront;
+    newFront.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    newFront.y = sin(glm::radians(Pitch));
+    newFront.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    Front = glm::normalize(newFront);
 
-void Camera::Mouse_cam(float xoffset, float yoffset, GLboolean constrainPitch) {
-    xoffset *= MouseSensitivity;
-    yoffset *= MouseSensitivity;
+    Right = glm::normalize(glm::cross(Front, WorldUp)); // Normalize the right vector
+    Up = glm::normalize(glm::cross(Right, Front));      // Normalize the up vector
+}
 
-    Yaw += xoffset;
-    Pitch += yoffset;
+
+// Processes mouse movement to update the camera's yaw and pitch, with optional pitch constraint
+void Camera::Mouse_cam(float xOffset, float yOffset, GLboolean constrainPitch) {
+    xOffset *= MouseSensitivity;
+    yOffset *= MouseSensitivity;
+
+    Yaw += xOffset;
+    Pitch += yOffset;
 
     if (constrainPitch) {
         if (Pitch > 89.0f) Pitch = 89.0f;
         if (Pitch < -89.0f) Pitch = -89.0f;
     }
 
-    updateCameraVectors();
+    updateVec();
 }
 
-void Camera::Mouse_scroll(float yoffset) {
-    Zoom -= yoffset;
+// Processes mouse scroll input to zoom in or out
+void Camera::Mouse_scroll(float yOffset) {
+    Zoom -= yOffset;
     if (Zoom < 1.0f) Zoom = 1.0f;
     if (Zoom > 45.0f) Zoom = 45.0f;
 }
 
-void Camera::updateCameraVectors() {
-    glm::vec3 front;
-    front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-    front.y = sin(glm::radians(Pitch));
-    front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-    Front = glm::normalize(front);
-
-    Right = glm::normalize(glm::cross(Front, WorldUp));
-    Up = glm::normalize(glm::cross(Right, Front));
-}

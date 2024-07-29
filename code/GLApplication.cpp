@@ -34,14 +34,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
-// Function declarations
-bool savePPMImageFile(const std::string& filepath, const std::vector<GLfloat>& pixels, int width, int height);
-
 // Global variables
 GLFWwindow* window = nullptr;
 Scene* scene = nullptr;
 Model_Scene* sceneQuad = nullptr;
-int windowWidth = 1280;
+int windowWidth = 1680;
 int windowHeight = 960;
 float lastX = windowWidth / 2.0f;
 float lastY = windowHeight / 2.0f;
@@ -131,24 +128,6 @@ int main()
     return 0;
 }
 
-bool savePPMImageFile(const std::string& filepath, const std::vector<GLfloat>& pixels, int width, int height)
-{
-    std::ofstream texFile(filepath);
-    if (!texFile.is_open()) {
-        return false;
-    }
-
-    texFile << "P3\n" << width << " " << height << "\n255\n";
-    auto it = pixels.begin();
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
-            texFile << *it++ << " " << *it++ << " " << *it++ << " ";
-        }
-        texFile << '\n';
-    }
-    texFile.close();
-    return true;
-}
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {

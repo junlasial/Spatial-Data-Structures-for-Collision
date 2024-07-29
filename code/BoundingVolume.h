@@ -10,7 +10,7 @@ namespace BoundingVolume
 {
 
 
-	Collision::AABB createAABB(std::vector<glm::vec3>& vertices);
+	Collision::AABB makeAABB(std::vector<glm::vec3>& vertices);
 
 
 };

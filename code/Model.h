@@ -8,9 +8,6 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-#include <../code/Mesh.h>
-
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -18,8 +15,12 @@
 #include <map>
 #include <vector>
 
+#include <../code/Mesh.h>
+
+
+
 using namespace std;
-namespace SpatialPartitioning
+namespace partition
 {
     struct poly_shape;
 }
@@ -28,8 +29,8 @@ class Model
 public:
     // model data 
     vector<Mesh> meshes;
-    vector<glm::vec3> combinedVertices;
-    std::string directory;
+    vector<glm::vec3> combined_v;
+    std::string dir;
     bool gammaCorrection{};
 
     Model() = default;
@@ -38,16 +39,14 @@ public:
 
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string const& path);
-    void loadPoint();
+   
     void loadLine();
-    void loadRay();
     void loadTriangle();
-    void updateRay(Vertex finalPoint);
 
-    void loadBSPPolygons(const std::vector<SpatialPartitioning::poly_shape>& polygons);
+    void loadBSPPolygons(const std::vector<partition::poly_shape>& polygons);
     // draws the model, and thus all its meshes
     void Draw();
-    void GenericDraw();
+  
     void BV_draw();
     void tri_draw();
     void updateTriangle(std::vector<Vertex>& newVertices);

@@ -10,7 +10,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
-#include "SpatialPartitioning.h"
+#include "partition.h"
 //#include "Collision.h"
 
 class Model_Scene : public Scene
@@ -26,10 +26,10 @@ public:
 
     inline GLuint GetProgramID() { return programID; }
     inline Camera* GetCamera() { return &camera; }
-    void RenderOctTree(SpatialPartitioning::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col);
-    void RenderBSPTree(SpatialPartitioning::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view);
-    void FreeOctTree(SpatialPartitioning::TreeNode* node);
-    void FreeBSPTree(SpatialPartitioning::BSPNode* node);
+    void RenderOctTree(partition::TreeNode* tree, const glm::mat4& projection, const glm::mat4& view, int col);
+    void RenderBSPTree(partition::BSPNode* tree, const glm::mat4& projection, const glm::mat4& view);
+    void FreeOctTree(partition::TreeNode* node);
+    void FreeBSPTree(partition::BSPNode* node);
 
 private:
     void initMembers();
@@ -57,10 +57,10 @@ private:
     bool newOctTree = false;
     int depth_OctT = 0;
     bool colored_oct = false;
-    SpatialPartitioning::TreeNode* spatialPartitionTree;
-    SpatialPartitioning::BSPNode* BSPTree;
-    std::map<const char*, std::vector<SpatialPartitioning::poly_shape>> modelPolys;
-    std::vector<SpatialPartitioning::poly_shape> totalObjPolygons;
+    partition::TreeNode* spatialPartitionTree;
+    partition::BSPNode* BSPTree;
+    std::map<const char*, std::vector<partition::poly_shape>> modelPolys;
+    std::vector<partition::poly_shape> totalObjPolygons;
     int spatPartTree = 0;
     bool BSPTreeEnabled = false;
     bool renderBSPTree = true;
