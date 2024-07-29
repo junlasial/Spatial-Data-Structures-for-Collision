@@ -13222,7 +13222,7 @@ void ImGui::ShowStackToolWindow(bool* p_open)
         const float id_width = CalcTextSize("0xDDDDDDDD").x;
         TableSetupColumn("Seed", ImGuiTableColumnFlags_WidthFixed, id_width);
         TableSetupColumn("PushID", ImGuiTableColumnFlags_WidthStretch);
-        TableSetupColumn("Result", ImGuiTableColumnFlags_WidthFixed, id_width);
+        TableSetupColumn("final", ImGuiTableColumnFlags_WidthFixed, id_width);
         TableHeadersRow();
         for (int n = 0; n < tool->Results.Size; n++)
         {

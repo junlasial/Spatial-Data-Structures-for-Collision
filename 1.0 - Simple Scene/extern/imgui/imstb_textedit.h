@@ -359,7 +359,7 @@ typedef struct
 //
 //     StbTexteditRow
 //
-// Result of layout query, used by stb_textedit to determine where
+// final of layout query, used by stb_textedit to determine where
 // the text in each row is.
 
 // result of layout query
